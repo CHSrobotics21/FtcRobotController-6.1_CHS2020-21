@@ -1,0 +1,164 @@
+<html>
+<head>
+<title>Odometry.java</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #000080; font-weight: bold;}
+.s1 { color: #000000;}
+.s2 { color: #808080; font-style: italic;}
+.s3 { color: #008000; font-weight: bold;}
+.s4 { color: #0000ff;}
+.s5 { color: #808080; font-weight: bold; font-style: italic;}
+.ln { color: #999999; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#ffffff">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#c0c0c0" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+Odometry.java</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0">package </span>org.firstinspires.ftc.teamcode;
+<a name="l2"><span class="ln">2    </span></a>
+<a name="l3"><span class="ln">3    </span></a><span class="s0">import </span>com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+<a name="l4"><span class="ln">4    </span></a><span class="s0">import </span>com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+<a name="l5"><span class="ln">5    </span></a><span class="s0">import </span>com.qualcomm.robotcore.hardware.DcMotor;
+<a name="l6"><span class="ln">6    </span></a><span class="s0">import </span>com.qualcomm.robotcore.hardware.DcMotorSimple;
+<a name="l7"><span class="ln">7    </span></a><span class="s2">/**</span>
+<a name="l8"><span class="ln">8    </span></a> <span class="s2">* Created by Sarthak on 10/4/2019.</span>
+<a name="l9"><span class="ln">9    </span></a> <span class="s2">*/</span>
+<a name="l10"><span class="ln">10   </span></a>@TeleOp(name = <span class="s3">&quot;Odometry OpMode&quot;</span>)
+<a name="l11"><span class="ln">11   </span></a><span class="s0">public class </span>Odometry <span class="s0">extends </span>LinearOpMode {
+<a name="l12"><span class="ln">12   </span></a>    <span class="s2">//Drive motors</span>
+<a name="l13"><span class="ln">13   </span></a>    DcMotor frMotor, flMotor, brMotor, blMotor, wheel, launcherR, launcherL;
+<a name="l14"><span class="ln">14   </span></a>    <span class="s2">//Odometry Wheels</span>
+<a name="l15"><span class="ln">15   </span></a>    DcMotor verticalLeft, verticalRight, horizontal;
+<a name="l16"><span class="ln">16   </span></a>
+<a name="l17"><span class="ln">17   </span></a>    <span class="s0">final double </span>COUNTS_PER_INCH = <span class="s4">307.699557</span>;
+<a name="l18"><span class="ln">18   </span></a>
+<a name="l19"><span class="ln">19   </span></a>    <span class="s2">//Hardware Map Names for drive motors and odometry wheels. THIS WILL CHANGE ON EACH ROBOT, YOU NEED TO UPDATE THESE VALUES ACCORDINGLY</span>
+<a name="l20"><span class="ln">20   </span></a>    String rfName = <span class="s3">&quot;frontright&quot;</span>, rbName = <span class="s3">&quot;backright&quot;</span>, lfName = <span class="s3">&quot;frontleft&quot;</span>, lbName = <span class="s3">&quot;backleft&quot;</span>;
+<a name="l21"><span class="ln">21   </span></a>    String verticalLeftEncoderName = rbName, verticalRightEncoderName = lfName, horizontalEncoderName = rfName;
+<a name="l22"><span class="ln">22   </span></a>
+<a name="l23"><span class="ln">23   </span></a>    OdometryGlobalCoordinatePosition globalPositionUpdate;
+<a name="l24"><span class="ln">24   </span></a>
+<a name="l25"><span class="ln">25   </span></a>    @Override
+<a name="l26"><span class="ln">26   </span></a>    <span class="s0">public void </span>runOpMode() <span class="s0">throws </span>InterruptedException {
+<a name="l27"><span class="ln">27   </span></a>        <span class="s2">//Initialize hardware map values. PLEASE UPDATE THESE VALUES TO MATCH YOUR CONFIGURATION</span>
+<a name="l28"><span class="ln">28   </span></a>        initDriveHardwareMap(rfName, rbName, lfName, lbName, verticalLeftEncoderName, verticalRightEncoderName, horizontalEncoderName);
+<a name="l29"><span class="ln">29   </span></a>
+<a name="l30"><span class="ln">30   </span></a>        telemetry.addData(<span class="s3">&quot;Status&quot;</span>, <span class="s3">&quot;Init Complete&quot;</span>);
+<a name="l31"><span class="ln">31   </span></a>        telemetry.update();
+<a name="l32"><span class="ln">32   </span></a>        waitForStart();
+<a name="l33"><span class="ln">33   </span></a>
+<a name="l34"><span class="ln">34   </span></a>        <span class="s2">//Create and start GlobalCoordinatePosition thread to constantly update the global coordinate positions</span>
+<a name="l35"><span class="ln">35   </span></a>        globalPositionUpdate = <span class="s0">new </span>OdometryGlobalCoordinatePosition(verticalLeft, verticalRight, horizontal, COUNTS_PER_INCH, <span class="s4">75</span>);
+<a name="l36"><span class="ln">36   </span></a>        Thread positionThread = <span class="s0">new </span>Thread(globalPositionUpdate);
+<a name="l37"><span class="ln">37   </span></a>        positionThread.start();
+<a name="l38"><span class="ln">38   </span></a>
+<a name="l39"><span class="ln">39   </span></a>        globalPositionUpdate.reverseRightEncoder();
+<a name="l40"><span class="ln">40   </span></a>        globalPositionUpdate.reverseNormalEncoder();
+<a name="l41"><span class="ln">41   </span></a>
+<a name="l42"><span class="ln">42   </span></a>        goToPosition(<span class="s4">0</span>*COUNTS_PER_INCH, <span class="s4">24</span>*COUNTS_PER_INCH, <span class="s4">.5</span>, <span class="s4">0</span>, <span class="s4">1</span>*COUNTS_PER_INCH );
+<a name="l43"><span class="ln">43   </span></a>        goToPosition(<span class="s4">0</span>*COUNTS_PER_INCH, <span class="s4">24</span>*COUNTS_PER_INCH, <span class="s4">.5</span>, <span class="s4">0</span>, <span class="s4">1</span>*COUNTS_PER_INCH );
+<a name="l44"><span class="ln">44   </span></a>        goToPosition(<span class="s4">0</span>*COUNTS_PER_INCH, <span class="s4">24</span>*COUNTS_PER_INCH, <span class="s4">.5</span>, <span class="s4">0</span>, <span class="s4">1</span>*COUNTS_PER_INCH );
+<a name="l45"><span class="ln">45   </span></a>        <span class="s0">while</span>(opModeIsActive()){
+<a name="l46"><span class="ln">46   </span></a>            <span class="s2">//Display Global (x, y, theta) coordinates</span>
+<a name="l47"><span class="ln">47   </span></a>            telemetry.addData(<span class="s3">&quot;X Position&quot;</span>, globalPositionUpdate.returnXCoordinate() / COUNTS_PER_INCH);
+<a name="l48"><span class="ln">48   </span></a>            telemetry.addData(<span class="s3">&quot;Y Position&quot;</span>, globalPositionUpdate.returnYCoordinate() / COUNTS_PER_INCH);
+<a name="l49"><span class="ln">49   </span></a>            telemetry.addData(<span class="s3">&quot;Orientation (Degrees)&quot;</span>, globalPositionUpdate.returnOrientation());
+<a name="l50"><span class="ln">50   </span></a>
+<a name="l51"><span class="ln">51   </span></a>            telemetry.addData(<span class="s3">&quot;Vertical left encoder position&quot;</span>, verticalLeft.getCurrentPosition());
+<a name="l52"><span class="ln">52   </span></a>            telemetry.addData(<span class="s3">&quot;Vertical right encoder position&quot;</span>, verticalRight.getCurrentPosition());
+<a name="l53"><span class="ln">53   </span></a>            telemetry.addData(<span class="s3">&quot;horizontal encoder position&quot;</span>, horizontal.getCurrentPosition());
+<a name="l54"><span class="ln">54   </span></a>
+<a name="l55"><span class="ln">55   </span></a>            telemetry.addData(<span class="s3">&quot;Thread Active&quot;</span>, positionThread.isAlive());
+<a name="l56"><span class="ln">56   </span></a>            telemetry.update();
+<a name="l57"><span class="ln">57   </span></a>        }
+<a name="l58"><span class="ln">58   </span></a>
+<a name="l59"><span class="ln">59   </span></a>        <span class="s2">//Stop the thread</span>
+<a name="l60"><span class="ln">60   </span></a>        globalPositionUpdate.stop();
+<a name="l61"><span class="ln">61   </span></a>
+<a name="l62"><span class="ln">62   </span></a>    }
+<a name="l63"><span class="ln">63   </span></a>
+<a name="l64"><span class="ln">64   </span></a>    <span class="s0">public void </span>goToPosition(<span class="s0">double </span>targetXPosition, <span class="s0">double </span>targetYPosition, <span class="s0">double </span>robotPower, <span class="s0">double </span>desiredRobotOrientation, <span class="s0">double </span>allowableDistanceError ){
+<a name="l65"><span class="ln">65   </span></a>        <span class="s0">double </span>distanceToXTarget = targetXPosition - globalPositionUpdate.returnXCoordinate();
+<a name="l66"><span class="ln">66   </span></a>        <span class="s0">double </span>distanceToYTarget = targetYPosition - globalPositionUpdate.returnYCoordinate();
+<a name="l67"><span class="ln">67   </span></a>
+<a name="l68"><span class="ln">68   </span></a>        <span class="s0">double </span>distance = Math.hypot(distanceToXTarget, distanceToYTarget);
+<a name="l69"><span class="ln">69   </span></a>        <span class="s0">while </span>(opModeIsActive() &amp;&amp; distance &gt; allowableDistanceError) {
+<a name="l70"><span class="ln">70   </span></a>             distance = Math.hypot(distanceToXTarget, distanceToYTarget);
+<a name="l71"><span class="ln">71   </span></a>             distanceToXTarget = targetXPosition - globalPositionUpdate.returnXCoordinate();
+<a name="l72"><span class="ln">72   </span></a>             distanceToYTarget = targetYPosition - globalPositionUpdate.returnYCoordinate();
+<a name="l73"><span class="ln">73   </span></a>            <span class="s0">double </span>robotMovementAngle = Math.toDegrees(Math.atan2(distanceToXTarget, distanceToYTarget));
+<a name="l74"><span class="ln">74   </span></a>            <span class="s0">double </span>robotMovmentXComponent = calculateX(robotMovementAngle, robotPower);
+<a name="l75"><span class="ln">75   </span></a>            <span class="s0">double </span>robotMovmentYComponent = calculateY(robotMovementAngle, robotPower);
+<a name="l76"><span class="ln">76   </span></a>            <span class="s0">double </span>pivotCorrection = desiredRobotOrientation - globalPositionUpdate.returnOrientation();
+<a name="l77"><span class="ln">77   </span></a>        }
+<a name="l78"><span class="ln">78   </span></a>    }
+<a name="l79"><span class="ln">79   </span></a>
+<a name="l80"><span class="ln">80   </span></a>
+<a name="l81"><span class="ln">81   </span></a>    <span class="s0">private void </span>initDriveHardwareMap(String rfName, String rbName, String lfName, String lbName, String vlEncoderName, String vrEncoderName, String hEncoderName){
+<a name="l82"><span class="ln">82   </span></a>        frMotor = hardwareMap.dcMotor.get(rfName);
+<a name="l83"><span class="ln">83   </span></a>        flMotor = hardwareMap.dcMotor.get(lfName);
+<a name="l84"><span class="ln">84   </span></a>        brMotor = hardwareMap.dcMotor.get(rbName);
+<a name="l85"><span class="ln">85   </span></a>        blMotor = hardwareMap.dcMotor.get(lbName);
+<a name="l86"><span class="ln">86   </span></a>
+<a name="l87"><span class="ln">87   </span></a>        verticalLeft = hardwareMap.dcMotor.get(vlEncoderName);
+<a name="l88"><span class="ln">88   </span></a>       verticalRight = hardwareMap.dcMotor.get(vrEncoderName);
+<a name="l89"><span class="ln">89   </span></a>       horizontal = hardwareMap.dcMotor.get(hEncoderName);
+<a name="l90"><span class="ln">90   </span></a>
+<a name="l91"><span class="ln">91   </span></a>        frMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+<a name="l92"><span class="ln">92   </span></a>        brMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+<a name="l93"><span class="ln">93   </span></a>        flMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+<a name="l94"><span class="ln">94   </span></a>        blMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+<a name="l95"><span class="ln">95   </span></a>
+<a name="l96"><span class="ln">96   </span></a>        frMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+<a name="l97"><span class="ln">97   </span></a>        brMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+<a name="l98"><span class="ln">98   </span></a>        flMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+<a name="l99"><span class="ln">99   </span></a>        blMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+<a name="l100"><span class="ln">100  </span></a>
+<a name="l101"><span class="ln">101  </span></a>        verticalLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+<a name="l102"><span class="ln">102  </span></a>        verticalRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+<a name="l103"><span class="ln">103  </span></a>        horizontal.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+<a name="l104"><span class="ln">104  </span></a>
+<a name="l105"><span class="ln">105  </span></a>        verticalLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+<a name="l106"><span class="ln">106  </span></a>        verticalRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+<a name="l107"><span class="ln">107  </span></a>        horizontal.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+<a name="l108"><span class="ln">108  </span></a>
+<a name="l109"><span class="ln">109  </span></a>
+<a name="l110"><span class="ln">110  </span></a>        frMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+<a name="l111"><span class="ln">111  </span></a>        brMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+<a name="l112"><span class="ln">112  </span></a>        flMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+<a name="l113"><span class="ln">113  </span></a>        blMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+<a name="l114"><span class="ln">114  </span></a>
+<a name="l115"><span class="ln">115  </span></a>        flMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+<a name="l116"><span class="ln">116  </span></a>        frMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+<a name="l117"><span class="ln">117  </span></a>        brMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+<a name="l118"><span class="ln">118  </span></a>
+<a name="l119"><span class="ln">119  </span></a>        telemetry.addData(<span class="s3">&quot;Status&quot;</span>, <span class="s3">&quot;Hardware Map Init Complete&quot;</span>);
+<a name="l120"><span class="ln">120  </span></a>        telemetry.update();
+<a name="l121"><span class="ln">121  </span></a>    }
+<a name="l122"><span class="ln">122  </span></a>
+<a name="l123"><span class="ln">123  </span></a>    <span class="s2">/**</span>
+<a name="l124"><span class="ln">124  </span></a>     <span class="s2">* Calculate the power in the x direction</span>
+<a name="l125"><span class="ln">125  </span></a>     <span class="s2">* </span><span class="s5">@param </span><span class="s2">desiredAngle angle on the x axis</span>
+<a name="l126"><span class="ln">126  </span></a>     <span class="s2">* </span><span class="s5">@param </span><span class="s2">speed robot's speed</span>
+<a name="l127"><span class="ln">127  </span></a>     <span class="s2">* </span><span class="s5">@return </span><span class="s2">the x vector</span>
+<a name="l128"><span class="ln">128  </span></a>     <span class="s2">*/</span>
+<a name="l129"><span class="ln">129  </span></a>    <span class="s0">private double </span>calculateX(<span class="s0">double </span>desiredAngle, <span class="s0">double </span>speed) {
+<a name="l130"><span class="ln">130  </span></a>        <span class="s0">return </span>Math.sin(Math.toRadians(desiredAngle)) * speed;
+<a name="l131"><span class="ln">131  </span></a>    }
+<a name="l132"><span class="ln">132  </span></a>
+<a name="l133"><span class="ln">133  </span></a>    <span class="s2">/**</span>
+<a name="l134"><span class="ln">134  </span></a>     <span class="s2">* Calculate the power in the y direction</span>
+<a name="l135"><span class="ln">135  </span></a>     <span class="s2">* </span><span class="s5">@param </span><span class="s2">desiredAngle angle on the y axis</span>
+<a name="l136"><span class="ln">136  </span></a>     <span class="s2">* </span><span class="s5">@param </span><span class="s2">speed robot's speed</span>
+<a name="l137"><span class="ln">137  </span></a>     <span class="s2">* </span><span class="s5">@return </span><span class="s2">the y vector</span>
+<a name="l138"><span class="ln">138  </span></a>     <span class="s2">*/</span>
+<a name="l139"><span class="ln">139  </span></a>    <span class="s0">private double </span>calculateY(<span class="s0">double </span>desiredAngle, <span class="s0">double </span>speed) {
+<a name="l140"><span class="ln">140  </span></a>        <span class="s0">return </span>Math.cos(Math.toRadians(desiredAngle)) * speed;
+<a name="l141"><span class="ln">141  </span></a>    }
+<a name="l142"><span class="ln">142  </span></a>}</pre>
+</body>
+</html>
