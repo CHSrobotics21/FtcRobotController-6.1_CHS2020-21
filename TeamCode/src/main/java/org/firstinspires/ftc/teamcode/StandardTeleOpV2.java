@@ -524,8 +524,8 @@ public class StandardTeleOpV2 extends OpMode {
             fieldReference = 0;
             //Positive values for x axis are joystick right
             //Positive values for y axis are joystick down
-            y = Range.clip(gamepad1.right_stick_y,-1,1);
-            x = Range.clip(gamepad1.right_stick_x,-1,1);
+            y = Range.clip(-gamepad1.right_stick_y,-1,1);
+            x = Range.clip(-gamepad1.right_stick_x,-1,1);
             joystickAngle = Math.atan2(x,y);
         } else {   //Controls are mapped to the field
             fieldReference = desiredRobotHeading;
