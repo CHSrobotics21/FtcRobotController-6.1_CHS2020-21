@@ -225,11 +225,11 @@ public class RedAutoV3 extends LinearOpMode {
                   */
 
              launchSetZero();
-              wobbleArmHingeL.setPower(-1);
-              wobbleArmHingeR.setPower(1);
-              sleep(200);
-              wobbleArmHingeL.setPower(0);
-              wobbleArmHingeR.setPower(0);
+//              wobbleArmHingeL.setPower(-1);
+//              wobbleArmHingeR.setPower(1);
+//              sleep(200);
+//              wobbleArmHingeL.setPower(0);
+//              wobbleArmHingeR.setPower(0);
              sleep(500);
              goToPositionSlowDown(74, 15, .5, 0, 8);
              goToPositionSetZero(84, 17, .4, 0, 1);
@@ -514,9 +514,9 @@ public class RedAutoV3 extends LinearOpMode {
         else if (box == "b" || box == "c") {
                 goToPositionSetZero(goAroundRingsCoorX, goAroundRingsCoorY, .85, 0, 8); // First movement out of starting postition to strafe to the first box
                 if (box == "b") {
-                    goToPositionSlowDown(101-comeback, 103+comeback, .7, 0, 8);// box b
+                    goToPositionSlowDown(102-comeback, 103+comeback, .7, 0, 8);// box b
                 } else {//box c
-                    goToPositionSlowDown(114-comeback, 124+comeback, .7, 0, 8);
+                    goToPositionSlowDown(115-comeback, 124+comeback, .7, 0, 8);
                 }
             }
             if (doHingeArm) {
