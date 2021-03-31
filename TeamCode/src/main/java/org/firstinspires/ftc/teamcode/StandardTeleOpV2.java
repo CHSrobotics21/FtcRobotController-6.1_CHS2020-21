@@ -119,6 +119,9 @@ public class StandardTeleOpV2 extends OpMode {
     private Double startY;
     public Double startOrientation;
 
+    boolean robotPerspective = false;
+    double fieldReference = 0.0;
+
     @Override
     public void init() {
         //distanceColor = hardwareMap.colorSensor.get("distanceColor");
@@ -304,11 +307,11 @@ public class StandardTeleOpV2 extends OpMode {
             collectorWheel.setPower(0);
         }
         topPrevious = topCurrent;
-        topCurrent = ringStopperSensor.getDistance(DistanceUnit.CM)<1.8&&ringStopperSensor.getDistance(DistanceUnit.CM)>0;
+        topCurrent = ringStopperSensor.getDistance(DistanceUnit.CM)<4.6&&ringStopperSensor.getDistance(DistanceUnit.CM)>0;
         if (topPrevious && !topCurrent){
             rings--;
         }
-        if (ringStopperSensor.getDistance(DistanceUnit.CM)<2&&ringStopperSensor.getDistance(DistanceUnit.CM)>1 && islaunchRunning){
+        if (ringStopperSensor.getDistance(DistanceUnit.CM)<4.6&&ringStopperSensor.getDistance(DistanceUnit.CM)>0 && islaunchRunning){
             moveCollectorWheel();
             isWheelRunning = false;
         }
@@ -502,11 +505,10 @@ public class StandardTeleOpV2 extends OpMode {
             lockDrive = false;
         }
 
-        y = Range.clip(gamepad1.left_stick_x, -1, 1);
-        x = Range.clip(gamepad1.left_stick_y, -1, 1);
-        joystickAngle = Math.atan2(-x, y);
-        joystickAngle360 = joystickAngle >= 0 ? joystickAngle : (2 * Math.PI) + joystickAngle;
-        driveSpeed = Range.clip(Math.sqrt(y * y + x * x), -1, 1);
+        //y = Range.clip(gamepad1.left_stick_x, -1, 1);
+        //x = Range.clip(gamepad1.left_stick_y, -1, 1);
+        //joystickAngle = Math.atan2(-x, y);
+        //joystickAngle360 = joystickAngle >= 0 ? joystickAngle : (2 * Math.PI) + joystickAngle;
         if (gamepad1.right_trigger > .05 || gamepad1.left_trigger > .05) {
             driveRotation = gamepad1.left_trigger - gamepad1.right_trigger;
             desiredRobotHeading = getIntegratedHeading();
@@ -516,11 +518,38 @@ public class StandardTeleOpV2 extends OpMode {
         else {
             driveRotation = 0;
         }
+        if (gamepad1.dpad_up) {robotPerspective = true;}
+        if (gamepad1.dpad_down) {robotPerspective = false;}
+        if (robotPerspective) { //Controls are mapped to the robot perspective
+            fieldReference = 0;
+            //Positive values for x axis are joystick right
+            //Positive values for y axis are joystick down
+            y = Range.clip(gamepad1.right_stick_y,-1,1);
+            x = Range.clip(gamepad1.right_stick_x,-1,1);
+            joystickAngle = Math.atan2(x,y);
+        } else {   //Controls are mapped to the field
+            fieldReference = desiredRobotHeading;
+            //Positive values for x axis are joystick right
+            //Positive values for y axis are joystick down
+            y = Range.clip(gamepad1.right_stick_x,-1,1);
+            x = Range.clip(-gamepad1.right_stick_y,-1,1);
+            joystickAngle = Math.atan2(x,y);
+            // joystickAngle360 = joystickAngle >= 0 ? joystickAngle : (2*Math.PI) + joystickAngle;
+        }
+        joystickAngle360 = joystickAngle >= 0 ? joystickAngle : (2*Math.PI) + joystickAngle;
+        driveSpeed = Range.clip(Math.sqrt(y * y + x * x), -1, 1);
 
-        flPower = Math.cos(joystickAngle360 - Math.toRadians(desiredRobotHeading) + Math.PI / 4);
-        frPower = Math.sin(joystickAngle360 - Math.toRadians(desiredRobotHeading) + Math.PI / 4);
-        blPower = Math.sin(joystickAngle360 - Math.toRadians(desiredRobotHeading) + Math.PI / 4);
-        brPower = Math.cos(joystickAngle360 - Math.toRadians(desiredRobotHeading) + Math.PI / 4);
+
+//        flPower = Math.cos(joystickAngle360 - Math.toRadians(desiredRobotHeading) + Math.PI / 4);
+//        frPower = Math.sin(joystickAngle360 - Math.toRadians(desiredRobotHeading) + Math.PI / 4);
+//        blPower = Math.sin(joystickAngle360 - Math.toRadians(desiredRobotHeading) + Math.PI / 4);
+//        brPower = Math.cos(joystickAngle360 - Math.toRadians(desiredRobotHeading) + Math.PI / 4);
+//        maxMotorPower = Math.max(Math.max(Math.max(Math.abs(flPower), Math.abs(frPower)), Math.abs(blPower)), Math.abs(brPower));
+        flPower = Math.cos(joystickAngle360 - Math.toRadians(fieldReference) + Math.PI / 4);
+        frPower = Math.sin(joystickAngle360 - Math.toRadians(fieldReference) + Math.PI / 4);
+        blPower = Math.sin(joystickAngle360 - Math.toRadians(fieldReference) + Math.PI / 4);
+        brPower = Math.cos(joystickAngle360 - Math.toRadians(fieldReference) + Math.PI / 4);
+
         maxMotorPower = Math.max(Math.max(Math.max(Math.abs(flPower), Math.abs(frPower)), Math.abs(blPower)), Math.abs(brPower));
 
         //Ratio the powers for direction
@@ -535,6 +564,7 @@ public class StandardTeleOpV2 extends OpMode {
         brPower = driveSpeed * brPower + driveRotation;
 
         maxMotorPower = Math.max(Math.max(Math.max(Math.abs(flPower), Math.abs(frPower)), Math.abs(blPower)), Math.abs(brPower));
+
 
         if (Math.abs(maxMotorPower) > 1) {
             flPower = flPower / maxMotorPower;
