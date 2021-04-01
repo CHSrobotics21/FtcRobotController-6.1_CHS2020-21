@@ -65,9 +65,9 @@ import java.util.List;
  * IMPORTANT: In order to use this OpMode, you need to obtain your own Vuforia license key as
  * is explained below.
  */
-@Autonomous(name = "RedAutoV3", group = "TFOdometry")
-//@Disabled
-public class StandardRedAuto extends LinearOpMode {
+@Autonomous(name = "red auto v6", group = "TFOdometry")
+@Disabled
+public class StandardRedAutoV2 extends LinearOpMode {
     private static final String TFOD_MODEL_ASSET = "UltimateGoal.tflite";
     private static final String LABEL_FIRST_ELEMENT = "Quad";
     private static final String LABEL_SECOND_ELEMENT = "Single";
@@ -93,12 +93,11 @@ public class StandardRedAuto extends LinearOpMode {
     DigitalChannel gripSwitch, armSwitch;
     VoltageSensor volts;
     DistanceSensor distanceSensor, ringStopperSensor;
-    int x = 101;
+    int x =-6;
     int i = 0;
     boolean ringIsSensed = false;
 
     File TeleOpStartingPos = AppUtil.getInstance().getSettingsFile("TeleOpStartingPos.txt");
-    File RingSensorData = AppUtil.getInstance().getSettingsFile("RingSensorData.txt");
     OdometryGlobalCoordinatePosition globalPositionUpdate;
 
 
@@ -232,9 +231,9 @@ public class StandardRedAuto extends LinearOpMode {
 //              wobbleArmHingeL.setPower(0);
 //              wobbleArmHingeR.setPower(0);
              sleep(500);
-             goToPositionSetZero(70, 66.5, .5, 0, 3);
-             goToPositionSlowDown(70, 13, .5, 0, 8);
-             goToPositionSetZero(82, 15, .4, 0, 1);
+             goToPositionSetZero(70, 66, .5, 0, 4);
+             goToPositionSlowDown(76, 17, .4, 0, 1);
+             goToPositionSetZero(80,17,.40,0,1);
              grip(true);
              sleep(750);
              goToBoxDeliverWobble(76.5, 61, false, 6);
@@ -537,31 +536,27 @@ public class StandardRedAuto extends LinearOpMode {
     public void powershot(){
         telemetry.addData("ring sensor: ", ringStopperSensor.getDistance(DistanceUnit.CM));
          x -= 4;
-        goToPositionSetZero(x, 66.5, .35, -10, 1.5);// move to behind white Line and position in front of powershot for powershot 1
+        goToPositionSetZero(96, 66.5, .35, x, 1.5);// move to behind white Line and position in front of powershot for powershot 1
         powershotTimer.reset();
-        if(x==97) {
+        if(x==-10) {
             while (opModeIsActive() && (ringStopperSensor.getDistance(DistanceUnit.CM) < 4.7&&powershotTimer.time()<2)) {
-                collectorWheel.setPower(-.9);
-//                telemetry.addData("ring stopper distance1: ", ringStopperSensor.getDistance(DistanceUnit.CM));
-//                telemetry.update();
-                ReadWriteFile.writeFile(RingSensorData, "first powershot data: "+ ringStopperSensor.getDistance(DistanceUnit.CM)+" cm");
+                collectorWheel.setPower(-.7);
+                telemetry.addData("ring stopper distance1: ", ringStopperSensor.getDistance(DistanceUnit.CM));
+                telemetry.update();
             }
         }
         else{
             while(opModeIsActive() && (ringStopperSensor.getDistance(DistanceUnit.CM)>4.7&&powershotTimer.time()<2)){
-                collectorWheel.setPower(-.9);
-//                telemetry.addData("ring stopper: ", ringStopperSensor.getDistance(DistanceUnit.CM));
-//                telemetry.update();
-                ReadWriteFile.writeFile(RingSensorData, "ring distance data not under sensor: "+ ringStopperSensor.getDistance(DistanceUnit.CM)+" cm");
-
+                collectorWheel.setPower(-.7);
+                telemetry.addData("ring stopper distance: ", ringStopperSensor.getDistance(DistanceUnit.CM));
+                telemetry.update();
             }
             powershotTimer.reset();
             collectorWheel.setPower(0);
-            while (opModeIsActive() && (ringStopperSensor.getDistance(DistanceUnit.CM) < 4.7&&powershotTimer.time()<2)) {
-                collectorWheel.setPower(-.9);
-//                telemetry.addData("ring stopper distance: ", ringStopperSensor.getDistance(DistanceUnit.CM));
-//                telemetry.update();
-                ReadWriteFile.writeFile(RingSensorData, "ring sensor data under sensor : "+ ringStopperSensor.getDistance(DistanceUnit.CM)+" cm");
+            while (opModeIsActive() && (ringStopperSensor.getDistance(DistanceUnit.CM) < 4.7&powershotTimer.time()<2)) {
+                collectorWheel.setPower(-.7);
+                telemetry.addData("ring stopper distance: ", ringStopperSensor.getDistance(DistanceUnit.CM));
+                telemetry.update();
             }
         }
         collectorWheel.setPower(0);
