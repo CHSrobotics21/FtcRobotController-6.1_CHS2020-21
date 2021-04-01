@@ -30,7 +30,6 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -65,9 +64,9 @@ import java.util.List;
  * IMPORTANT: In order to use this OpMode, you need to obtain your own Vuforia license key as
  * is explained below.
  */
-@Autonomous(name = "RedAutoV3", group = "TFOdometry")
+@Autonomous(name = "EncoderWobble", group = "TFOdometry")
 //@Disabled
-public class RedAutoV3 extends LinearOpMode {
+public class WobbleArmRunByEncoder extends LinearOpMode {
     private static final String TFOD_MODEL_ASSET = "UltimateGoal.tflite";
     private static final String LABEL_FIRST_ELEMENT = "Quad";
     private static final String LABEL_SECOND_ELEMENT = "Single";
@@ -204,18 +203,19 @@ public class RedAutoV3 extends LinearOpMode {
             launcherAngle.setPosition(.43);
             launcherAngleR.setPosition(.43);
             //hinge(true); testing
+            hinge(true);
 
             //**GO TO BOX INSTRUCTIONS + DELIVER WOBBLE GOAL TO CORRECT BOX**
-             goToBoxDeliverWobble(123,31,true, 0);
-             sleep(1500);
-            launch();
-            sleep(1000);
-            powershot();
-            collector.setPower(-1);
-            powershot();
-            powershot();
-            collector.setPower(0);
-            collectorWheel.setPower(0);
+//             goToBoxDeliverWobble(123,31,true, 0);
+//             sleep(1500);
+//            launch();
+//            sleep(1000);
+//            powershot();
+//            collector.setPower(-1);
+//            powershot();
+//            powershot();
+//            collector.setPower(0);
+//            collectorWheel.setPower(0);
              /*^end of powershot shooting^*/
 
              /*go back to get 2nd wobble goal (where we think it's gonna be- tolerance could interrupt movements) while leaving the wobble goal arm out
@@ -224,21 +224,21 @@ public class RedAutoV3 extends LinearOpMode {
                  inch foreward to make sure of grip
                   */
 
-             launchSetZero();
+//             launchSetZero();
 //              wobbleArmHingeL.setPower(-1);
 //              wobbleArmHingeR.setPower(1);
 //              sleep(200);
 //              wobbleArmHingeL.setPower(0);
 //              wobbleArmHingeR.setPower(0);
-             sleep(500);
-             goToPositionSlowDown(74, 15, .5, 0, 8);
-             goToPositionSetZero(84, 17, .4, 0, 1);
-             grip(true);
-             sleep(750);
-             goToBoxDeliverWobble(76.5, 61, false, 4);
-             sleep(750);
-             goToPositionSetZero(80,80,.9,0,2);//parking behind white
-
+//             sleep(500);
+//             goToPositionSlowDown(74, 15, .5, 0, 8);
+//             goToPositionSetZero(84, 17, .4, 0, 1);
+//             grip(true);
+//             sleep(750);
+//             goToBoxDeliverWobble(76.5, 61, false, 4);
+//             sleep(750);
+//             goToPositionSetZero(80,80,.9,0,2);//parking behind white
+//
 
             String ContentsToWriteToFile = (globalPositionUpdate.returnXCoordinate()/COUNTS_PER_INCH) + " " + (globalPositionUpdate.returnYCoordinate()/COUNTS_PER_INCH) + " " + (globalPositionUpdate.returnOrientation());
 
@@ -247,7 +247,7 @@ public class RedAutoV3 extends LinearOpMode {
 //            telemetry.addData("StartingPostionY", globalPositionUpdate.returnYCoordinate());
 //            telemetry.addData("StartingOrientation", globalPositionUpdate.returnOrientation());
 
-            goToPositionSlowDown(111, 24, .6, 0, 2); // go back to starting position for programmers testing ease :)
+            //goToPositionSlowDown(111, 24, .6, 0, 2); // go back to starting position for programmers testing ease :)
 
 
         }
@@ -514,9 +514,9 @@ public class RedAutoV3 extends LinearOpMode {
         else if (box == "b" || box == "c") {
                 goToPositionSetZero(goAroundRingsCoorX, goAroundRingsCoorY, .85, 0, 8); // First movement out of starting postition to strafe to the first box
                 if (box == "b") {
-                    goToPositionSlowDown(102-comeback, 103+comeback, .7, 0, 8);// box b
+                    goToPositionSlowDown(101-comeback, 103+comeback, .7, 0, 8);// box b
                 } else {//box c
-                    goToPositionSlowDown(115-comeback, 124+comeback, .7, 0, 8);
+                    goToPositionSlowDown(114-comeback, 124+comeback, .7, 0, 8);
                 }
             }
             if (doHingeArm) {

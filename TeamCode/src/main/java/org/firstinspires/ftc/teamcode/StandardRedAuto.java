@@ -34,6 +34,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
@@ -44,6 +45,7 @@ import com.qualcomm.robotcore.util.ReadWriteFile;
 
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
 import org.firstinspires.ftc.robotcore.external.tfod.TFObjectDetector;
@@ -63,9 +65,9 @@ import java.util.List;
  * IMPORTANT: In order to use this OpMode, you need to obtain your own Vuforia license key as
  * is explained below.
  */
-@Disabled
-@Autonomous(name = "servo encoder", group = "TFOdometry")
-public class EncoderServoTest extends LinearOpMode {
+@Autonomous(name = "RedAutoV3", group = "TFOdometry")
+//@Disabled
+public class StandardRedAuto extends LinearOpMode {
     private static final String TFOD_MODEL_ASSET = "UltimateGoal.tflite";
     private static final String LABEL_FIRST_ELEMENT = "Quad";
     private static final String LABEL_SECOND_ELEMENT = "Single";
@@ -82,15 +84,18 @@ public class EncoderServoTest extends LinearOpMode {
     double launchPower = 0.0;
 
     List<Recognition> updatedRecognitions;
-    DcMotor frMotor, flMotor, brMotor, blMotor, collectorWheel;
+    DcMotor frMotor, flMotor, brMotor, blMotor, collectorWheel, collector;
     String box;
     CRServo wobbleArmHingeL, wobbleArmHingeR;
-    Servo launcherAngleR, launcherAngle, wobbleArmGripL, wobbleArmGripR;
-    DcMotor verticalLeft, verticalRight, horizontal, launcherR, launcherL;
+    Servo launcherAngleR, launcherAngle, wobbleArmGripL, wobbleArmGripR, ringStopper;
+    DcMotor verticalLeft, verticalRight, horizontal;
+    DcMotorEx launcherR, launcherL;
     DigitalChannel gripSwitch, armSwitch;
     VoltageSensor volts;
-    DistanceSensor distanceSensor;
-
+    DistanceSensor distanceSensor, ringStopperSensor;
+    int x = 101;
+    int i = 0;
+    boolean ringIsSensed = false;
 
     File TeleOpStartingPos = AppUtil.getInstance().getSettingsFile("TeleOpStartingPos.txt");
     OdometryGlobalCoordinatePosition globalPositionUpdate;
@@ -179,7 +184,6 @@ public class EncoderServoTest extends LinearOpMode {
 
                    }
                    telemetry.addData("box: ",box);
-                   telemetry.addData("Servo encoder counts: ", brMotor.getCurrentPosition());
                    telemetry.update();
                }
            }
@@ -197,58 +201,53 @@ public class EncoderServoTest extends LinearOpMode {
             //globalPositionUpdate.reverseNormalEncoder();
 
             // starting postion for linear actuators
-            launcherAngle.setPosition(.4);
-            launcherAngleR.setPosition(.4);
-            hinge(true); //testing
+            launcherAngle.setPosition(.43);
+            launcherAngleR.setPosition(.43);
+            //hinge(true); testing
 
             //**GO TO BOX INSTRUCTIONS + DELIVER WOBBLE GOAL TO CORRECT BOX**
-//             goToBoxDeliverWobble(123,31,true);
-//            sleep(1500);
-//             launcherR.setPower(-.65); //initiate launchers to be stopped whe you should stop shooting
-//             launcherL.setPower(.65);
-//             goToPositionSetZero(89, 70, .7, 0, 1);// move to behind white Line and position in front of powershot for powershot 1
-////             sleep(1000);
-//             moveCollectorWheel(4);
-//             sleep(1500);
-//             goToPositionSetZero(82, 70, .7, 0, 1); //powershot 2
-//             sleep(500);
-//             moveCollectorWheel(5);
-//             sleep(1000);
-//             goToPositionSetZero(75, 70, .7, 0, 1); //powershot 3
-//             sleep(500);
-//             moveCollectorWheel(5);
-//             sleep(1000);
-//             /*^end of powershot shooting^*/
-//
-//             /*go back to get 2nd wobble goal (where we think it's gonna be- tolerance could interrupt movements) while leaving the wobble goal arm out
-//                so we can get a grip from the right side of the robot
-//                incorporate sensor to detect if the robot has actually gotten grip on the wobble goal
-//                 inch foreward to make sure of grip
-//                  */
-//             launcherL.setPower(0);
-//             launcherR.setPower(0);
-//             wobbleArmHingeL.setPower(-1);
-//             wobbleArmHingeR.setPower(1);
-//             sleep(250);
-//             wobbleArmHingeL.setPower(0);
-//             wobbleArmHingeR.setPower(0);
-//             sleep(500);
-//             goToPositionSlowDown(74, 15, .7, 0, 8);
-//             goToPositionSetZero(86, 17, .5, 0, .5);
-//             grip(true);
-//             sleep(750);
-//             goToBoxDeliverWobble(76.5, 61, false);
-//             goToPositionSetZero(80,80,.9,0,2);//parking behind white
+             goToBoxDeliverWobble(123,31,true, 0);
+             sleep(1500);
+            launch();
+            sleep(1000);
+            powershot();
+            collector.setPower(-1);
+            powershot();
+            powershot();
+            collector.setPower(0);
+            collectorWheel.setPower(0);
+             /*^end of powershot shooting^*/
+
+             /*go back to get 2nd wobble goal (where we think it's gonna be- tolerance could interrupt movements) while leaving the wobble goal arm out
+                so we can get a grip from the right side of the robot
+                incorporate sensor to detect if the robot has actually gotten grip on the wobble goal
+                 inch foreward to make sure of grip
+                  */
+
+             launchSetZero();
+//              wobbleArmHingeL.setPower(-1);
+//              wobbleArmHingeR.setPower(1);
+//              sleep(200);
+//              wobbleArmHingeL.setPower(0);
+//              wobbleArmHingeR.setPower(0);
+             sleep(500);
+             goToPositionSlowDown(74, 15, .5, 0, 8);
+             goToPositionSetZero(84, 17, .4, 0, 1);
+             grip(true);
+             sleep(750);
+             goToBoxDeliverWobble(76.5, 61, false, 4);
+             sleep(750);
+             goToPositionSetZero(80,80,.9,0,2);//parking behind white
 
 
             String ContentsToWriteToFile = (globalPositionUpdate.returnXCoordinate()/COUNTS_PER_INCH) + " " + (globalPositionUpdate.returnYCoordinate()/COUNTS_PER_INCH) + " " + (globalPositionUpdate.returnOrientation());
 
             ReadWriteFile.writeFile(TeleOpStartingPos, ContentsToWriteToFile);
-            telemetry.addData("StartingPostionX", globalPositionUpdate.returnXCoordinate());
-            telemetry.addData("StartingPostionY", globalPositionUpdate.returnYCoordinate());
-            telemetry.addData("StartingOrientation", globalPositionUpdate.returnOrientation());
+//            telemetry.addData("StartingPostionX", globalPositionUpdate.returnXCoordinate());
+//            telemetry.addData("StartingPostionY", globalPositionUpdate.returnYCoordinate());
+//            telemetry.addData("StartingOrientation", globalPositionUpdate.returnOrientation());
 
-            //goToPositionSetZero(111, 20, .9, 0, 2); // go back to starting position for programmers testing ease :)
+            goToPositionSlowDown(111, 24, .6, 0, 2); // go back to starting position for programmers testing ease :)
 
 
         }
@@ -355,13 +354,15 @@ public class EncoderServoTest extends LinearOpMode {
         blMotor = hardwareMap.dcMotor.get("backleft");
 
         collectorWheel = hardwareMap.dcMotor.get("wheel");
+        collector = hardwareMap.dcMotor.get("collector");
 
-        collectorWheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        collectorWheel.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        launcherL = hardwareMap.dcMotor.get("launcherL");
-        launcherR = hardwareMap.dcMotor.get("launcherR");
+        launcherL = hardwareMap.get(DcMotorEx.class,"launcherL");
+        launcherR = hardwareMap.get(DcMotorEx.class, "launcherR");
+        launcherR.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        launcherL.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         launcherAngle = hardwareMap.get(Servo.class, "ServoL");
         launcherAngleR = hardwareMap.get(Servo.class, "ServoR");
+        ringStopper = hardwareMap.servo.get("ringStopper");
 
         verticalLeft = hardwareMap.dcMotor.get("backleft");
         verticalRight = hardwareMap.dcMotor.get("frontleft");
@@ -372,6 +373,7 @@ public class EncoderServoTest extends LinearOpMode {
         wobbleArmHingeL = hardwareMap.crservo.get("HingeL");
         wobbleArmHingeR = hardwareMap.crservo.get("HingeR");
         distanceSensor = hardwareMap.get(DistanceSensor.class, "ringSensor");
+        ringStopperSensor = hardwareMap.get(DistanceSensor.class, "ringStopperSensor");
         gripSwitch = hardwareMap.get(DigitalChannel.class, "gripSwitch");
         gripSwitch.setMode(DigitalChannel.Mode.INPUT);
         armSwitch = hardwareMap.get(DigitalChannel.class, "armSwitch");
@@ -393,8 +395,8 @@ public class EncoderServoTest extends LinearOpMode {
         verticalRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         horizontal.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
-        brMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        brMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+//        brMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+//        blMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         frMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         brMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -470,26 +472,26 @@ public class EncoderServoTest extends LinearOpMode {
 //            wobbleArmHingeR.setPower(0); // open arm
 //        }
 //    }
-   public void hinge(boolean p)
-   {
-       if (p)// bring down arm
-       {
-           while(opModeIsActive()&&!(brMotor.getCurrentPosition()>-3556&&brMotor.getCurrentPosition()<-3156)) /*find threshold for when wobble goal arm is not down; don't want arm to be all the way down*/ {
-               wobbleArmHingeL.setPower(-1);
-               wobbleArmHingeR.setPower(1);
-           }
-           wobbleArmHingeL.setPower(0) ;
-           wobbleArmHingeR.setPower(0);
-       }
-       else {//bring arm back up
-           while(opModeIsActive()&&brMotor.getCurrentPosition()<500&&brMotor.getCurrentPosition()>900) /*find threshold for when wobble goal arm is not up*/ {
-               wobbleArmHingeL.setPower(1);
-               wobbleArmHingeR.setPower(-1);
-           }
-           wobbleArmHingeL.setPower(0);
-           wobbleArmHingeR.setPower(0);
-       }
-   }
+    public void hinge(boolean p)
+    {
+        if (p)// bring down arm
+        {
+            while(opModeIsActive()&&!(brMotor.getCurrentPosition()>-2900&&brMotor.getCurrentPosition()<-2500)) /*find threshold for when wobble goal arm is not down; don't want arm to be all the way down*/ {
+                wobbleArmHingeL.setPower(-1);
+                wobbleArmHingeR.setPower(1);
+            }
+            wobbleArmHingeL.setPower(0) ;
+            wobbleArmHingeR.setPower(0);
+        }
+        else {//bring arm back up
+            while(opModeIsActive()&&!(brMotor.getCurrentPosition()<-500&&brMotor.getCurrentPosition()>-900)) /*find threshold for when wobble goal arm is not up*/ {
+                wobbleArmHingeL.setPower(1);
+                wobbleArmHingeR.setPower(-1);
+            }
+            wobbleArmHingeL.setPower(0);
+            wobbleArmHingeR.setPower(0);
+        }
+    }
 
     public void moveCollectorWheel(int inches)
     { //place after go to position statements to shoot at power shot
@@ -497,27 +499,24 @@ public class EncoderServoTest extends LinearOpMode {
         collectorWheel.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         collectorWheel.setPower(1);
     }
-
     public void launch(){
-        //set launcher wheels same
-        launcherL.setTargetPosition(collectorWheel.getCurrentPosition());
-        launcherR.setTargetPosition(collectorWheel.getCurrentPosition()); //could go by counts instead of inches because theoretically you want to be moving for an unknown amount of inches
-        launcherL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        launcherR.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        launcherL.setPower(.7);
-        launcherR.setPower(-.7);
+        launcherL.setVelocity(500);
+        launcherR.setVelocity(-475);
     }
-
-    public void goToBoxDeliverWobble(double goAroundRingsCoorX, double goAroundRingsCoorY, boolean doHingeArm) {
+    public void launchSetZero(){
+        launcherL.setVelocity(0);
+        launcherR.setVelocity(0);
+    }
+    public void goToBoxDeliverWobble(double goAroundRingsCoorX, double goAroundRingsCoorY, boolean doHingeArm, int comeback) {
         if (box == "a") {
-            goToPositionSlowDown(110, 79, .85, 0, 8);// box a
+            goToPositionSlowDown(115-comeback, 79+comeback, .85, 0, 8);// box a
         }
         else if (box == "b" || box == "c") {
                 goToPositionSetZero(goAroundRingsCoorX, goAroundRingsCoorY, .85, 0, 8); // First movement out of starting postition to strafe to the first box
                 if (box == "b") {
-                    goToPositionSlowDown(97, 103, .85, 0, 8);// box b
+                    goToPositionSlowDown(102-comeback, 103+comeback, .7, 0, 8);// box b
                 } else {//box c
-                    goToPositionSlowDown(110, 124, .85, 0, 8);
+                    goToPositionSlowDown(115-comeback, 124+comeback, .7, 0, 8);
                 }
             }
             if (doHingeArm) {
@@ -529,6 +528,36 @@ public class EncoderServoTest extends LinearOpMode {
     public void goToPositionSlowDown(double targetXPosition, double targetYPosition, double robotPower, double desiredRobotOrientation, double allowableDistanceError ){
         goToPositionSetZero(targetXPosition,targetYPosition,robotPower,desiredRobotOrientation,8);
         goToPositionSetZero(targetXPosition,targetYPosition,robotPower-.3,desiredRobotOrientation,1.2);
+    }
+    public void powershot(){
+        telemetry.addData("ring sensor: ", ringStopperSensor.getDistance(DistanceUnit.CM));
+         x -= 7;
+        goToPositionSetZero(x, 66.5, .35, -10, 1.5);// move to behind white Line and position in front of powershot for powershot 1
+        if(x==94) {
+            while (opModeIsActive() && ringStopperSensor.getDistance(DistanceUnit.CM) < 4.7) {
+                collectorWheel.setPower(-.7);
+                telemetry.addData("ring stopper distance1: ", ringStopperSensor.getDistance(DistanceUnit.CM));
+                telemetry.update();
+            }
+        }
+        else{
+            while(opModeIsActive()&&ringStopperSensor.getDistance(DistanceUnit.CM)>4.7){
+                collectorWheel.setPower(-.7);
+                telemetry.addData("ring stopper distance: ", ringStopperSensor.getDistance(DistanceUnit.CM));
+                telemetry.update();
+            }
+            collectorWheel.setPower(0);
+            while (opModeIsActive() && ringStopperSensor.getDistance(DistanceUnit.CM) < 4.7) {
+                collectorWheel.setPower(-.7);
+                telemetry.addData("ring stopper distance: ", ringStopperSensor.getDistance(DistanceUnit.CM));
+                telemetry.update();
+            }
+        }
+        collectorWheel.setPower(0);
+//        if(x > 89){
+//            sleep(250);
+//        }
+
     }
 
 }

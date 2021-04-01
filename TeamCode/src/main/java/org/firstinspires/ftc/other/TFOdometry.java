@@ -27,32 +27,27 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.other;
 
 import android.util.Log;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
-import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
-import com.qualcomm.robotcore.util.ReadWriteFile;
 
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
 import org.firstinspires.ftc.robotcore.external.tfod.TFObjectDetector;
-import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
+import org.firstinspires.ftc.teamcode.OdometryGlobalCoordinatePosition;
 
-import java.io.File;
-import java.util.List;import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-
+import java.util.List;
 
 /**
  * This 2020-2021 OpMode illustrates the basics of using the TensorFlow Object Detection API to
@@ -64,40 +59,40 @@ import java.util.List;import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
  * IMPORTANT: In order to use this OpMode, you need to obtain your own Vuforia license key as
  * is explained below.
  */
-
-@Autonomous(name = "AutoTFOdometry", group = "TFOdometry")
+@Autonomous(name = "AutoOdomTF", group = "TFOdometry")
 @Disabled
-public class AutoTFOdometryRED extends LinearOpMode {
+public class TFOdometry extends LinearOpMode {
     private static final String TFOD_MODEL_ASSET = "UltimateGoal.tflite";
     private static final String LABEL_FIRST_ELEMENT = "Quad";
     private static final String LABEL_SECOND_ELEMENT = "Single";
     private ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.SECONDS);
 
     final double COUNTS_PER_REV = 8192; // CPR for REV Through Bore Encoders
-    final double WHEEL_DIAMETER = 2.3622; //in inches, 38mm for odometry aluminum omni wheels
+    final double WHEEL_DIAMETER = 1.49606; //in inches, 38mm for odometry aluminum omni wheels
     double COUNTS_PER_INCH = COUNTS_PER_REV / (WHEEL_DIAMETER * 3.1415);
-    final double CPRCollectorWheel = 288;
-    final double CollectorWheelDiameter = 5;
-    double CPICollectorWheel = CPRCollectorWheel/(CollectorWheelDiameter*3.1415);
 
     List<Recognition> updatedRecognitions;
-    DcMotor frMotor, flMotor, brMotor, blMotor, collectorWheel;
+    DcMotor frMotor, flMotor, brMotor, blMotor;
     String box;
-    CRServo wobbleArmGripL, wobbleArmGripR, wobbleArmHingeL, wobbleArmHingeR;
-    Servo launcherAngleR, launcherAngle;
-    DcMotor verticalLeft, verticalRight, horizontal, launcherR, launcherL;
-    DigitalChannel limitSwitch;
+    Servo wobbleArmServo;
+    DcMotor verticalLeft, verticalRight, horizontal;
 
-
-    File TeleOpStartingPos = AppUtil.getInstance().getSettingsFile("TeleOpStartingPos.txt");
     OdometryGlobalCoordinatePosition globalPositionUpdate;
 
     String rfName = "frontright", rbName = "backright", lfName = "frontleft", lbName = "backleft";
-    String verticalLeftEncoderName = lbName, verticalRightEncoderName = lfName, horizontalEncoderName = rfName;
-
-
-
-
+    String verticalLeftEncoderName = rbName, verticalRightEncoderName = lfName, horizontalEncoderName = rfName;
+    /*
+     * IMPORTANT: You need to obtain your own license key to use Vuforia. The string below with which
+     * 'parameters.vuforiaLicenseKey' is initialized is for illustration only, and will not function.
+     * A Vuforia 'Development' license key, can be obtained free of charge from the Vuforia developer
+     * web site at https://developer.vuforia.com/license-manager.
+     *
+     * Vuforia license keys are always 380 characters long, and look as if they contain mostly
+     * random data. As an example, here is a example of a fragment of a valid key:
+     *      ... yIgIzTqZ4mWjk9wd3cZO9T1axEqzuhxoGlfOOI2dRzKS4T0hQ8kT ...
+     * Once you've obtained a license key, copy the string from the Vuforia web site
+     * and paste it in to your code on the next line, between the double quotes.
+     */
     private static final String VUFORIA_KEY =
             "AUSkSu//////AAABmbCDZkCjMUZdqlgBwBf0R6QmC3soC8rFfreNCDvJb7mhs7v6sWWIDBGTsR+tQeD9bSVikOsd2FpCDCK5qtLAy1U9ZgJZYN5O1IY3tuB6mnInb759EdsgxKJJT4OVFT1+QnozHYvi5BFK+Fwke9UKEohiv7baoXoYZbwDnjkTz6t1b5lg1em2Ebk2KGP3jOKS7fJkjQACDxIH9ikJ8/ShRnhMzVYge98MMhNxNTGM6T4rrdeBXZrS/pHAW9xu0k846P0/njOAVxgxgUywkX3GbbyqRuqio2KsQX9qCu+bGGEh08moFoMGdcX91l2QzOMkF7zjfFvmZfW8Aeth3sCt2+KonhX5vGAxnMeec0WZ105Q";
 
@@ -147,137 +142,76 @@ public class AutoTFOdometryRED extends LinearOpMode {
         /** Wait for the game to begin */
         telemetry.addData(">", "Press Play to start op mode");
         telemetry.update();
-       while(!isStarted()&& !isStopRequested()){
-           if (tfod != null) { // checks for object
-               // getUpdatedRecognitions() will return null if no new information is available since
-               // the last time that call was made.
-               List<Recognition> updatedRecognitions = tfod.getUpdatedRecognitions();
-               //List: collection of data <what type of list object is going to be (Tensor Flow objects)>
-               //updatedRecognitions: object of the name of list
-               //tfod reference object, .getUpdatedRecognitions: method to update recognitions, loads into list
-               if (updatedRecognitions != null) { // checks for existence of recognitions
-                   telemetry.addData("# Object Detected", updatedRecognitions.size()); //tells driver station how many objects(rings) it sees
-                   box = "a"; //To assume we don't see anything
-                   // step through the list of recognitions and display boundary info.
-                   int i = 0; //int type variable i is set to value zero as start of count
-                   for (Recognition recognition : updatedRecognitions) { //iteration loop ex. hot dogs in a cart. takes recognitions and assigns until end of list
-                       telemetry.addData(String.format("label (%d)", i), recognition.getLabel()); //label will be "single", "quad", or nothing
-                       telemetry.addData(String.format("  left,top (%d)", i), "%.03f , %.03f",
-                               recognition.getLeft(), recognition.getTop()); // highest part of object, and leftmost part of object location
-                       telemetry.addData(String.format("  right,bottom (%d)", i), "%.03f , %.03f",
-                               recognition.getRight(), recognition.getBottom());
-                       if (recognition.getRight()>200&& recognition.getRight()<1000 && recognition.getBottom()>200 && recognition.getBottom()<1000) {
-                           //check within bounds, to recognize only some rings. (right location)
-                           if (recognition.getLabel() == "Single") {
-                               box = "b";
+        while(!isStarted()&& !isStopRequested()){
+            if (tfod != null) { // checks for object
+                // getUpdatedRecognitions() will return null if no new information is available since
+                // the last time that call was made.
+                List<Recognition> updatedRecognitions = tfod.getUpdatedRecognitions();
+                //List: collection of data <what type of list object is going to be (Tensor Flow objects)>
+                //updatedRecognitions: object of the name of list
+                //tfod reference object, .getUpdatedRecognitions: method to update recognitions, loads into list
+                if (updatedRecognitions != null) { // checks for existence of recognitions
+                    telemetry.addData("# Object Detected", updatedRecognitions.size()); //tells driver station how many objects(rings) it sees
+                    box = "a"; //To assume we don't see anything
+                    // step through the list of recognitions and display boundary info.
+                    int i = 0; //int type variable i is set to value zero as start of count
+                    for (Recognition recognition : updatedRecognitions) { //iteration loop ex. hot dogs in a cart. takes recognitions and assigns until end of list
+                        telemetry.addData(String.format("label (%d)", i), recognition.getLabel()); //label will be "single", "quad", or nothing
+                        telemetry.addData(String.format("  left,top (%d)", i), "%.03f , %.03f",
+                                recognition.getLeft(), recognition.getTop()); // highest part of object, and leftmost part of object location
+                        telemetry.addData(String.format("  right,bottom (%d)", i), "%.03f , %.03f",
+                                recognition.getRight(), recognition.getBottom());
+                        if (recognition.getRight()>200&& recognition.getRight()<1000 && recognition.getBottom()>200 && recognition.getBottom()<1000) {
+                            //check within bounds, to recognize only some rings. (right location)
+                            if (recognition.getLabel() == "Single") {
+                                box = "b";
 
-                           } else if (recognition.getLabel() == "Quad") {
-                               box = "c";
-                           } else {
-                               box = "a"; 
-                           }
-                       }
+                            } else if (recognition.getLabel() == "Quad") {
+                                box = "c";
+                            } else {
+                                box = "a";
+                            }
+                        }
 
-                   }
-                   telemetry.addData("box: ",box);
-                   //telemetry.addData("Angle: ", globalPositionUpdate.returnOrientation());
-                   telemetry.update();
-               }
-           }
-       }
+                    }
+                    telemetry.addData("box: ",box);
+                    telemetry.update();
+                }
+            }
+        }
         timer.reset();
-
 
         if (opModeIsActive()) { // Linear OpMode
             globalPositionUpdate = new OdometryGlobalCoordinatePosition(verticalLeft, verticalRight, horizontal, COUNTS_PER_INCH, 75, 111, 8.5, 0.0);
             Thread positionThread = new Thread(globalPositionUpdate);
             positionThread.start();
 
-            globalPositionUpdate.reverseLeftEncoder();
             globalPositionUpdate.reverseRightEncoder();
-            //globalPositionUpdate.reverseNormalEncoder();
-            // starting postion for linear actuators
-            launcherAngle.setPosition(.45);
-            launcherAngleR.setPosition(.45);
-            //**COLLECT WOBBLE GOAL**
+            globalPositionUpdate.reverseNormalEncoder();
 
-            //hingeWobbleGoalArm(-1);//*Hinge Wobble Goal Arm
-            //gripWobbleGoal(1);// *Grip Wobble Goal
-            //hingeWobbleGoalArm(1);//*UnHinge Wobble Goal Arm
-
-            //**GO TO BOX INSTRUCTIONS**
             if (box == "a") {
-                goToPositionSetZero(110,79,.4,0,2);// box a
+                goToPosition(118,83,.9,0,0.1);// box a
+                zero();
             }
             else if (box == "b" || box == "c") {
-                goToPositionSetZero(123,31,.4,0, 2); // First movement out of starting postition to strafe to the first box
+                goToPosition(123,31,.9,0, .1); // First movement out of starting postition to strafe to the first box
+                zero();
                 if (box == "b") {
-                    goToPositionSetZero(97,103,.4,0,2);// box b
+                    goToPosition(97,103,.9,0,.1);// box b
+                    zero();
                 }
                 else
                 {//box c
-                    goToPositionSetZero(110,130,.4,0,2);
-
+                    goToPosition(119,130,.9,0,.1);
+                    zero();
                 }
             }
 
-            // **DELIVER WOBBLE GOAL TO CORRECT BOX**
-//            hingeWobbleGoalArm(-1);//*Hinge Wobble Goal Arm
-//            gripWobbleGoal(-1);
-//            //hingeWobbleGoalArm(1);//*UnHinge Wobble Goal Arm
-//            wobbleArmGripR.setPower(0);
-//            wobbleArmGripL.setPower(0);
-//            wobbleArmHingeR.setPower(0);
-//            wobbleArmHingeL.setPower(0);
-//            if (timer.time()<26)
-//            {
-//                launcherR.setPower(-.9); //initaite launchers to be stopped whe you should stop shooting
-//                launcherL.setPower(.9);
-//                goToPositionSetZero(88,72,.9,0,2);// move to behind white Line and to correct shooting alignment for powershot 1
-//                moveCollectorWheel();
-//                sleep(250);
-//                //collector collecting
-//                //wheel encoder
-//                // distance sensor and counter for sending ring to launcher (sensorName.getDistance(DistanceUnit.CM))
-//                goToPositionSetZero(81, 72, .9, 0, 2); //powershot
-//                moveCollectorWheel();
-//                sleep(1000);
-//                goToPositionSetZero(74, 72, .9, 0, 2);
-//                moveCollectorWheel();
-//                /*end of powershot shooting*/
-//                //(46 from right wall,23) 2nd wobble goal
-//                launcherL.setPower(0);
-//                launcherR.setPower(0);
-//                /*go back to get 2nd wobble goal (where we think it's gonna be- tolerance could interrupt movements) while leaving the wobble goal arm out and
-//                changing the desired orientation
-//                so we can get a grip from the right side of the robot
-//                incorporate sensor to detect if the robot has actually gotten grip on the wobble goal
-//                inch foreword to make sure of grip
-//                 */
-//                //goToPositionSetZero();
-//                //drive forward until switch is pushed
-//                //go to box
-//                //if it reaches a certain position and hasn't been pushed go back to shooting
-//
-//
-//                //collectorWheel.setPower(0);
-//                goToPositionSetZero(globalPositionUpdate.returnXCoordinate(), 80, .9,0, 2 ); //parking behind white
-//            }
-//            else{
-//                goToPositionSetZero(globalPositionUpdate.returnXCoordinate(),80,0,0,2);
-//            }
+            //wobbleArmServo.setPosition(1);//drop wobble goal ***Change servo position maybe***
+            //variableNameForServo.setPosition(1);
+            //goToPosition(1,1,1,1,1);//****CHANGE VALUES**** move to behind white Line and to correct shooting alignment
 
-
-
-            String ContentsToWriteToFile = (globalPositionUpdate.returnXCoordinate()/COUNTS_PER_INCH) + " " + (globalPositionUpdate.returnYCoordinate()/COUNTS_PER_INCH) + " " + (globalPositionUpdate.returnOrientation());
-
-            ReadWriteFile.writeFile(TeleOpStartingPos, ContentsToWriteToFile);
-            telemetry.addData("StartingPostionX", globalPositionUpdate.returnXCoordinate());
-            telemetry.addData("StartingPostionY", globalPositionUpdate.returnYCoordinate());
-            telemetry.addData("StartingOrientation", globalPositionUpdate.returnOrientation());
-            //sleep(5000);
-            //goToPositionSetZero(111, 8.5, .9, 0, 2); // go back to starting position
-
+            //zero();
 
         }
         if (tfod != null) { //stop button
@@ -285,7 +219,6 @@ public class AutoTFOdometryRED extends LinearOpMode {
         }
         globalPositionUpdate.stop();
     }
-
 
     /**
      * Initialize the Vuforia localization engine.
@@ -310,13 +243,12 @@ public class AutoTFOdometryRED extends LinearOpMode {
      */
     private void initTfod() {
         int tfodMonitorViewId = hardwareMap.appContext.getResources().getIdentifier(
-            "tfodMonitorViewId", "id", hardwareMap.appContext.getPackageName());
+                "tfodMonitorViewId", "id", hardwareMap.appContext.getPackageName());
         TFObjectDetector.Parameters tfodParameters = new TFObjectDetector.Parameters(tfodMonitorViewId); //take out during competition; leave parentheses blank
-       tfodParameters.minResultConfidence = 0.85f;
-       tfod = ClassFactory.getInstance().createTFObjectDetector(tfodParameters, vuforia);
-       tfod.loadModelFromAsset(TFOD_MODEL_ASSET, LABEL_FIRST_ELEMENT, LABEL_SECOND_ELEMENT);
+        tfodParameters.minResultConfidence = 0.85f;
+        tfod = ClassFactory.getInstance().createTFObjectDetector(tfodParameters, vuforia);
+        tfod.loadModelFromAsset(TFOD_MODEL_ASSET, LABEL_FIRST_ELEMENT, LABEL_SECOND_ELEMENT);
     }
-
 
     public void goToPosition(double targetXPosition, double targetYPosition, double robotPower, double desiredRobotOrientation, double allowableDistanceError ){
         targetXPosition *= COUNTS_PER_INCH;
@@ -326,11 +258,11 @@ public class AutoTFOdometryRED extends LinearOpMode {
         double brPower = 0; // motor speed
         double flPower = 0; // motor speed
         double frPower = 0; // motor speed
-        double pivotCorrectionAdj = .1; // constant to scale down pivot correction angle to work with setting powers for mecanum drive motors
+        double pivotCorrectionAdj = .01; // constant to scale down pivot correction angle to work with setting powers for mecanum drive motors
         double distanceToXTarget = targetXPosition - globalPositionUpdate.returnXCoordinate();
         double distanceToYTarget = targetYPosition - globalPositionUpdate.returnYCoordinate();
         double distance = Math.hypot(distanceToXTarget, distanceToYTarget);
-        while (opModeIsActive() && distance > allowableDistanceError ) { //correct heading too
+        while (opModeIsActive() && distance > allowableDistanceError) {
             distance = Math.hypot(distanceToXTarget, distanceToYTarget);
             distanceToXTarget = targetXPosition - globalPositionUpdate.returnXCoordinate();
             distanceToYTarget = targetYPosition - globalPositionUpdate.returnYCoordinate();
@@ -366,9 +298,6 @@ public class AutoTFOdometryRED extends LinearOpMode {
             telemetry.addData("Orientation (Degrees)", globalPositionUpdate.returnOrientation());
             telemetry.addData("XComponent: ", robotMovmentXComponent/.9);
             telemetry.addData("YComponent: ", robotMovmentYComponent/.9);
-            telemetry.addData("vertical right", globalPositionUpdate.verticalRightEncoderWheelPosition);
-            telemetry.addData("vertical left", globalPositionUpdate.verticalLeftEncoderWheelPosition);
-            telemetry.addData("horizontal", globalPositionUpdate.normalEncoderWheelPosition);
             telemetry.addData("Pivot Correction: ", pivotCorrection);
             telemetry.update();
         }
@@ -380,22 +309,11 @@ public class AutoTFOdometryRED extends LinearOpMode {
         flMotor = hardwareMap.dcMotor.get(lfName);
         brMotor = hardwareMap.dcMotor.get(rbName);
         blMotor = hardwareMap.dcMotor.get(lbName);
-
-        collectorWheel = hardwareMap.dcMotor.get("wheel");
-
-        collectorWheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        collectorWheel.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        launcherL = hardwareMap.dcMotor.get("launcherL");
-        launcherR = hardwareMap.dcMotor.get("launcherR");
-        launcherAngle = hardwareMap.get(Servo.class, "ServoL");
-        launcherAngleR = hardwareMap.get(Servo.class, "ServoR");
-        verticalLeft = hardwareMap.dcMotor.get("backleft");
+        //Log.i("tobor", "done with get" );
+        verticalLeft = hardwareMap.dcMotor.get("backright");
         verticalRight = hardwareMap.dcMotor.get("frontleft");
         horizontal = hardwareMap.dcMotor.get("frontright");
-//        wobbleArmGripL = hardwareMap.crservo.get("GripL");
-//        wobbleArmGripR = hardwareMap.crservo.get("GripR");
-//        wobbleArmHingeL = hardwareMap.crservo.get("HingeL");
-//        wobbleArmHingeR = hardwareMap.crservo.get("HingeR");
+        Log.i("tobor1", "done with get" );
 
         frMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         brMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -414,7 +332,6 @@ public class AutoTFOdometryRED extends LinearOpMode {
         verticalLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         verticalRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         horizontal.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-
 
 
         frMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -449,63 +366,12 @@ public class AutoTFOdometryRED extends LinearOpMode {
     private double calculateY(double desiredAngle, double speed) {
         return Math.cos(Math.toRadians(desiredAngle)) * speed;
     }
-
-    public void goToPositionSetZero(double targetXPosition, double targetYPosition, double robotPower, double desiredRobotOrientation, double allowableDistanceError ){
-        goToPosition(targetXPosition, targetYPosition, robotPower, desiredRobotOrientation, allowableDistanceError);
+    private void zero()
+    {
         frMotor.setPower(0);
         blMotor.setPower(0);
         flMotor.setPower(0);
         brMotor.setPower(0);
     }
-
-    public void hingeWobbleGoalArm(int num){
-        if (num < 0)// -1 want to Hinge (bring down arm)
-        {
-            wobbleArmHingeL.setPower(-1);
-            wobbleArmHingeR.setPower(1);
-            sleep(1500);
-            wobbleArmHingeL.setPower(0);
-            wobbleArmHingeR.setPower(0);
-        }
-        if (num > 0) {// +1 want to unHinge (bring arm back up)
-            wobbleArmHingeL.setPower(1); // open arm
-            wobbleArmHingeR.setPower(-1); // open arm
-            sleep(1500); // continue for a second
-            wobbleArmHingeL.setPower(0); // stop servo
-            wobbleArmHingeR.setPower(0); // open arm
-        }
-    }
-    public void gripWobbleGoal(int num){
-        if (num > 0)// +1 to Grip
-        {
-            wobbleArmGripL.setPower(1); // open arm
-            wobbleArmGripR.setPower(-1); // open arm
-            sleep(1000); // continue for a second
-            wobbleArmGripL.setPower(0); // stop servo
-            wobbleArmGripR.setPower(0); // open arm
-        }
-        if (num < 0) {// -1 to ungrip
-            wobbleArmGripL.setPower(-1); // open arm
-            wobbleArmGripR.setPower(1); // open arm
-            sleep(1000); // continue for a second
-            wobbleArmGripL.setPower(0); // stop servo
-            wobbleArmGripR.setPower(0); // open arm
-        }
-    }
-    public void moveCollectorWheel()
-    { //place after go to position statements to shoot at power shot
-        collectorWheel.setTargetPosition(collectorWheel.getCurrentPosition() - 288); // enter encoder counts or inches you want to move times counts per inch FOR THIS WHEEL AND MOTORS
-        collectorWheel.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        collectorWheel.setPower(1);
-        while(opModeIsActive() && collectorWheel.isBusy()){
-        }
-        //collectorWheel.setPower(0);
-        //collectorWheel.setPower(1);
-        //launchers.setPower(1);
-        //sleep(2000);
-        //launchers.setPower(0);
-        //
-    }
-
 
 }

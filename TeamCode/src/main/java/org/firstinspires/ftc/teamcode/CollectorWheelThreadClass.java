@@ -2,7 +2,7 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.hardware.DcMotor;
 
-public class Collectorwheel implements Runnable{
+public class CollectorWheelThreadClass implements Runnable{
     private boolean isRunning = true;
     final double CPRCollectorWheel = 288;
     final double CollectorWheelDiameter = 5;
@@ -11,7 +11,7 @@ public class Collectorwheel implements Runnable{
 
     DcMotor collectorWheel;
 
-    public Collectorwheel(DcMotor collectorWheel){
+    public CollectorWheelThreadClass(DcMotor collectorWheel){
         this.collectorWheel = collectorWheel;
     }
 

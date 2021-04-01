@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode;/* Copyright (c) 2014, 2015 Qualcomm Technologies Inc
+package org.firstinspires.ftc.other;/* Copyright (c) 2014, 2015 Qualcomm Technologies Inc
 
 All rights reserved.
 
@@ -52,6 +52,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
+import org.firstinspires.ftc.teamcode.OdometryGlobalCoordinatePosition;
 
 import java.io.File;
 
@@ -59,15 +60,15 @@ import java.io.File;
 /**
  * Demonstrates empty OpMode
  */
-@TeleOp(name = "Robert&Evie", group = "Example")
-//@Disabled
-public class StandardTeleOp extends OpMode {
+@TeleOp(name = "TeleOnBot", group = "Example")
+@Disabled
+public class IterativeTeleOp extends OpMode {
 
     private ElapsedTime runtime = new ElapsedTime(ElapsedTime.Resolution.SECONDS);
     private ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.SECONDS);
     DcMotor frMotor, flMotor, brMotor, blMotor, collectorWheel, collector;
-    Servo launcherAngle, launcherAngleR;
     DcMotorEx launcherR, launcherL;
+    Servo launcherAngle, launcherAngleR;
     BNO055IMU imu;
     Orientation gyroAngles;
     ColorSensor colorSensor;
@@ -90,19 +91,11 @@ public class StandardTeleOp extends OpMode {
     final double CollectorWheelDiameter = 5;
     double CPICollectorWheel = CPRCollectorWheel/(CollectorWheelDiameter*3.1415);
     OdometryGlobalCoordinatePosition globalPositionUpdate;
-    Collectorwheel collectorwheelthread;
     Thread positionThread;
-    Thread wheelThread;
     boolean buttonPressed = false;
     boolean AIlaunch = false;
     double servoAdd = .4;
     boolean stopSensor = false;
-    boolean isWheelRunning = false;
-    boolean islaunchRunning= false;
-    boolean lockDrive = false;
-    boolean isCollectorWheel = false;
-    boolean launchToggle = false;
-    boolean gripToggle = false;
 
     @Override
     public void init() {
@@ -112,11 +105,8 @@ public class StandardTeleOp extends OpMode {
         blMotor = hardwareMap.dcMotor.get("backleft");
         collector = hardwareMap.dcMotor.get("collector");
 
-        launcherR = hardwareMap.get(DcMotorEx.class,"launcherR");
-        launcherL = hardwareMap.get(DcMotorEx.class,"launcherL");
-        launcherR.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        launcherL.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
+        launcherR = hardwareMap.get(DcMotorEx.class, "launcherR");
+        launcherL = hardwareMap.get(DcMotorEx.class, "launcherL");
         collectorWheel = hardwareMap.dcMotor.get("wheel");
         launcherAngle = hardwareMap.get(Servo.class, "ServoL");
        launcherAngleR = hardwareMap.get(Servo.class, "ServoR");
@@ -155,7 +145,6 @@ public class StandardTeleOp extends OpMode {
         telemetry.addData("StartingOrientation", startOrientation);
         telemetry.update();
         positionThread = new Thread(globalPositionUpdate);
-        wheelThread = new Thread(collectorwheelthread);
     }
 
 
@@ -179,7 +168,6 @@ public class StandardTeleOp extends OpMode {
         runtime.reset();
 
         positionThread.start();
-        wheelThread.start();
 
         globalPositionUpdate.reverseRightEncoder();
         globalPositionUpdate.reverseLeftEncoder();
@@ -188,11 +176,15 @@ public class StandardTeleOp extends OpMode {
 
     @Override
     public void loop() {
+        telemetry.addData("X Position", globalPositionUpdate.returnXCoordinate() / COUNTS_PER_INCH);
+        telemetry.addData("Y Position", globalPositionUpdate.returnYCoordinate() / COUNTS_PER_INCH);
+        telemetry.addData("Orientation (Degrees)", globalPositionUpdate.returnOrientation());
+        telemetry.update();
 
         gyroAngles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
 
-        y = Range.clip(gamepad1.left_stick_x, -1, 1);
-        x = Range.clip(gamepad1.left_stick_y, -1, 1);
+        y = Range.clip(gamepad1.right_stick_x, -1, 1);
+        x = Range.clip(gamepad1.right_stick_y, -1, 1);
         joystickAngle = Math.atan2(-x, y);
         joystickAngle360 = joystickAngle >= 0 ? joystickAngle : (2 * Math.PI) + joystickAngle;
 
@@ -207,130 +199,115 @@ public class StandardTeleOp extends OpMode {
         }
 
 
+        if (gamepad1.a)
+       {
+            launcherAngleR.setPosition(.5);
+            launcherAngle.setPosition(.5);
+            launcherL.setPower(1);
+            launcherR.setPower(-1);
+           if (goToPosition(105, 82, .9, 0, 1))
+           {
+            collector.setPower(.9);
+            collectorWheel.setPower(.9);
+           }
+           hinge(false);//close hinge
+       }
+       else{
+        launcherL.setPower(0);
+        launcherR.setPower(0);
+        collector.setPower(0);
+        collectorWheel.setPower(0);
+       }
 
-//        if(gamepad1.y) {
-//            launch();
-//            islaunchRunning = true;
-//            if (!buttonPressed) {
-//                timer.reset();
-//                buttonPressed = true;
-//            } else if (timer.time() > .2&&!isWheelRunning) {
-//                collectorWheel.setPower(-.9);
-//            }
-//        }
-//        else{
-//            islaunchRunning=false;
-//            buttonPressed=false;
-//            launchSetZero();
-//            AIlaunch = true;//collectorWheel.setPower(0);
-//        }
-        if(gamepad2.left_bumper){
-            isWheelRunning = true;
-            collectorwheelthread.moveCollectorWheel(8);
-            collectorWheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-            isWheelRunning = false;
-        }
-        else if(gamepad2.left_trigger>.05 && !isWheelRunning){
-            isWheelRunning = true;
-            collectorwheelthread.moveCollectorWheel(8);
-            collectorWheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-            isWheelRunning = false;
-        }
-//        if(gamepad2.right_bumper&&!isWheelRunning){
-//            isCollectorWheel = true;
-//            collectorWheel.setPower(-.9);
-//        }
-//        else if(gamepad2.right_trigger > .05&&!isWheelRunning){
-//            isCollectorWheel = true;
-//            collectorWheel.setPower(.9);
-//        }
-//        else if(intakeDistanceSensor.getDistance(DistanceUnit.INCH)<6.5||intakeDistanceSensor.getDistance(DistanceUnit.INCH)>20&&!stopSensor){
-//            collector.setPower(.7);
-//            moveCollectorWheel();
-//            collectorWheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-//            collectorWheel.setTargetPosition(0);
-//        }
-//        else if(AIlaunch){
-//            collectorWheel.setPower(0);
-//            isCollectorWheel = false;
-//            AIlaunch = false;
-//        }
-//        else{
-//
-//            collectorWheel.setPower(0);
-//            isCollectorWheel = false;
-//
-//        }
+//       if (gamepad1.y)
+//       {
+//           //change the gripper to closed
+//           //change the hinge to closed
+//           grip(false);
+//           hinge(false);
+//           if (goToPosition(globalPositionUpdate.returnXCoordinate()/COUNTS_PER_INCH, 8, .9, 90, .2))
+//           {
+//               hinge(true); //lower hinge
+//               grip(true);//release grip
+//           }
+//           hinge(false);//close hinge
+//       }
+//         if(gamepad2.y){
+//             launcherL.setPower(1);
+//             launcherR.setPower(1);
+//         }
+//         else{
+//             launcherL.setPower(0);
+//             launcherR.setPower(0);
+//         }
 
-        if(islaunchRunning&&isCollectorWheel){
-            lockDrive = true;
+        if(gamepad1.y) {
+            launcherL.setPower(.85);
+            launcherR.setPower(-.85);
+
+            if (!buttonPressed) {
+                timer.reset();
+                buttonPressed = true;
+            } else if (timer.time() > .2) {
+                collectorWheel.setPower(-.9);
+            }
+        }
+        else if(gamepad1.x) {
+            launcherL.setPower(.85);
+            launcherR.setPower(-.85);
         }
         else{
-            lockDrive = false;
+            buttonPressed=false;
+            launcherL.setPower(0);
+            launcherR.setPower(0);
+            AIlaunch = true;//collectorWheel.setPower(0);
         }
 
-        if(gamepad1.x){
-            launch();
-            goToPosition(89, 67, .7, 0, 1);
-            timer.reset();
-            if(timer.time()<2);
-            else{
-                launchSetZero();
-            }
-
-
-
+        if(gamepad2.left_bumper){
+            collectorWheel.setPower(-.9);
         }
-        if(gamepad1.a){
-            goToPosition(82, 67, .7, 0, 1); //powershot 2
+        else if(gamepad2.left_trigger > .05){
+            collectorWheel.setPower(.9);
         }
-        if(gamepad1.b){
-            goToPosition(75, 67, .7, 0, 1); //powershot 3
+        else if(intakeDistanceSensor.getDistance(DistanceUnit.INCH)<6.5||intakeDistanceSensor.getDistance(DistanceUnit.INCH)>20&&!stopSensor){
+            collectorWheel.setPower(-.9);
+        }
+        else if(AIlaunch){
+            collectorWheel.setPower(0);
+            AIlaunch=false;
+        }
+        else{
+
+            collectorWheel.setPower(0);
         }
 
-//        if(gamepad1.left_bumper){
-//            stopSensor = true;
-//        }
-//        if(gamepad1.right_bumper){
-//            stopSensor = false;
-//        }// stop distance sensor movements to run manual
+        if(gamepad1.left_bumper){
+            stopSensor = true;
+        }
+        if(gamepad1.right_bumper){
+            stopSensor = false;
+        }// stop distance sensor movements to run manual
+
         if(gamepad2.right_bumper){
             collector.setPower(.7);
-        }
-        else if(gamepad2.right_trigger > .05){
-            collector.setPower(-.7);
         }
         else{
             collector.setPower(0);
         }
-/*  not sure why using launchToggle instead of gripToggle; did you just duplicate the launcher code & forget to change launchToggle to gripToggle afterwards?
-        if(gamepad2.b){
-            launchToggle = !launchToggle;
-            if(launchToggle){
-                grip(true);
-            }
-            else{
-                grip(false);
-            }
+
+        if (gamepad2.a){
+            grip(true);
         }
-*/
-        if(gamepad2.x){
-            launchToggle = !launchToggle;
-            if(launchToggle){
-                launch();
-            }
-            else{
-                launchSetZero();
-            }
+        else if (gamepad2.b){
+            grip(false);
         }
 
         if(gamepad2.y)
         {
-            hinge(false);
-        }
-        else if(gamepad2.a)
-        {
             hinge(true);
+        }
+        else if(gamepad2.x) {
+            hinge(false);
         }
         else{
             wobbleArmHingeR.setPower(0);
@@ -367,41 +344,74 @@ public class StandardTeleOp extends OpMode {
             blPower = 0;
             brPower = 0;
         }
-        if(!lockDrive){
         flMotor.setPower(flPower);
         frMotor.setPower(frPower);
         blMotor.setPower(blPower);
         brMotor.setPower(brPower);
+//        if (gamepad1.a) {
+//            if (!goToPosition(107, 72, .9, 0, 1)) {
+//                launcherAngleR.setPosition(.5);
+//                launcherAngle.setPosition(.5);
+//            } else {
+//                launcherL.setPower(1);
+//                launcherR.setPower(-1);
+//                collector.setPower(.9);
+//                collectorWheel.setPower(.9);
+//            }
+//        }
+//        else {
+//            collector.setPower(0);
+//            collectorWheel.setPower(0);
+//            launcherL.setPower(0);
+//            launcherR.setPower(0);
+//        }
+//       if (gamepad1.b) {// for power shots so the robot just goes through it when we have three rings
+//           launcherL.setPower(1);
+//           launcherR.setPower(-1);
+//           launcherAngleR.setPosition(.4);// might need to change the position for the power shots
+//           launcherAngle.setPosition(.4);
+//           if (goToPosition(81, 72, .9, 0, .2)) {
+//               moveCollectorWheel();
+//               if (goToPosition(74, 72, .9, 0, .2)) {
+//                   moveCollectorWheel();
+//                   if (goToPosition(74, 80, 0.9, 0, .2)) {
+//                      moveCollectorWheel();
+//                   }
+//               }
+//           }
+//       }
+//       else {
+//               launcherL.setPower(0);
+//               launcherR.setPower(0);
+//           }
+//
+//            if(gamepad2.right_bumper) {
+//            collector.setPower(.4);
+//        }
+//        else if(gamepad2.left_bumper){
+//            collector.setPower(-.4);
+//        }
+//        else{
+//            collector.setPower(0);
+//        }
+    //}
+
+
+        if (gamepad1.b){
+
+            launcherAngleR.setPosition(.4);
+            launcherAngle.setPosition(.4);
+
         }
-        else if(gamepad1.left_bumper)
-        {
-            flMotor.setPower(flPower*.5);
-            frMotor.setPower(frPower*.5);
-            blMotor.setPower(blPower*.5);
-            brMotor.setPower(brPower*.5);
-        }
-        else{
-            flMotor.setPower(0);
-            frMotor.setPower(0);
-            blMotor.setPower(0);
-            brMotor.setPower(0);
+        if(gamepad1.a){
+
+            launcherAngleR.setPosition(.5);
+            launcherAngle.setPosition(.5);
+
         }
 
-//        if (gamepad1.b){
-//
-//            launcherAngleR.setPosition(.4);
-//            launcherAngle.setPosition(.4);
-//
-//        }
-//        if(gamepad1.a){
-//
-//            launcherAngleR.setPosition(.5);
-//            launcherAngle.setPosition(.5);
-//
-//        }
-
-        telemetry.addData("Status", "Run Time: " + runtime.toString());
-        telemetry.addData("Wobble counts", brMotor.getCurrentPosition());
+//        telemetry.addData("Status", "Run Time: " + runtime.toString());
+//        telemetry.addData("Wobble counts", brMotor.getCurrentPosition());
     }
 
 
@@ -450,22 +460,18 @@ public class StandardTeleOp extends OpMode {
             frMotor.setPower(frPower);
             blMotor.setPower(blPower);
             brMotor.setPower(brPower);
-            telemetry.addData("X Position", globalPositionUpdate.returnXCoordinate() / COUNTS_PER_INCH);
-            telemetry.addData("Y Position", globalPositionUpdate.returnYCoordinate() / COUNTS_PER_INCH);
-            telemetry.addData("Orientation (Degrees)", globalPositionUpdate.returnOrientation());
-            telemetry.addData("XComponent: ", robotMovmentXComponent / .9);
-            telemetry.addData("YComponent: ", robotMovmentYComponent / .9);
-            telemetry.addData("Pivot Correction: ", pivotCorrection);
-            telemetry.update();
+//            telemetry.addData("X Position", globalPositionUpdate.returnXCoordinate() / COUNTS_PER_INCH);
+//            telemetry.addData("Y Position", globalPositionUpdate.returnYCoordinate() / COUNTS_PER_INCH);
+//            telemetry.addData("Orientation (Degrees)", globalPositionUpdate.returnOrientation());
+//            telemetry.update();
+//            telemetry.addData("XComponent: ", robotMovmentXComponent / .9);
+//            telemetry.addData("YComponent: ", robotMovmentYComponent / .9);
+//            telemetry.addData("Pivot Correction: ", pivotCorrection);
+
             return false;
         }
         else{
-            flMotor.setPower(0);
-            frMotor.setPower(0);
-            blMotor.setPower(0);
-            brMotor.setPower(0);
             return true;
-
         }
     }
     private double calculateX(double desiredAngle, double speed) {
@@ -525,25 +531,21 @@ public class StandardTeleOp extends OpMode {
 
         }
     }
+    public void moveCollectorWheel()
+    { //place after go to position statements to shoot at power shot
+
+        collectorWheel.setTargetPosition(collectorWheel.getCurrentPosition() - (int)(5*CPICollectorWheel)); // enter encoder counts or inches you want to move times counts per inch FOR THIS WHEEL AND MOTORS
+        collectorWheel.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        collectorWheel.setPower(1);
+        timer.reset();
+        while(timer.time()<1){
+
+        }
+        collectorWheel.setPower(0);
+    }
     public void launch(){
-        launcherL.setVelocity(350);
-        launcherR.setVelocity(-350);
+        launcherR.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        launcherR.setVelocity(200);
     }
-    public void launchSetZero(){
-        launcherL.setVelocity(0);
-        launcherR.setVelocity(0);
-    }
-    // public void moveCollectorWheel()
-    // { //place after go to position statements to shoot at power shot
-
-    //     collectorWheel.setTargetPosition(collectorWheel.getCurrentPosition() - (int)(5*CPICollectorWheel)); // enter encoder counts or inches you want to move times counts per inch FOR THIS WHEEL AND MOTORS
-    //     collectorWheel.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-    //     collectorWheel.setPower(1);
-    //     timer.reset();
-    //     //while(timer.time()<1){
-
-    //     }
-    //     collectorWheel.setPower(0);
-    // }
-
 }
+

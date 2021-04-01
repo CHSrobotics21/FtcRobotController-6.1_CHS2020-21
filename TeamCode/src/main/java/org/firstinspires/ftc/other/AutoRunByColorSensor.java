@@ -27,17 +27,13 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.firstinspires.ftc.teamcode;
-
-import android.util.Log;
+package org.firstinspires.ftc.other;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
-import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
@@ -58,28 +54,17 @@ import java.util.List;
  * IMPORTANT: In order to use this OpMode, you need to obtain your own Vuforia license key as
  * is explained below.
  */
-@Autonomous(name = "AutoOdomTF", group = "TFOdometry")
+@Autonomous(name = "AutoColorSensor", group = "Concept")
 @Disabled
-public class TFOdometry extends LinearOpMode {
+public class AutoRunByColorSensor extends LinearOpMode {
     private static final String TFOD_MODEL_ASSET = "UltimateGoal.tflite";
     private static final String LABEL_FIRST_ELEMENT = "Quad";
     private static final String LABEL_SECOND_ELEMENT = "Single";
     private ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.SECONDS);
-
-    final double COUNTS_PER_REV = 8192; // CPR for REV Through Bore Encoders
-    final double WHEEL_DIAMETER = 1.49606; //in inches, 38mm for odometry aluminum omni wheels
-    double COUNTS_PER_INCH = COUNTS_PER_REV / (WHEEL_DIAMETER * 3.1415);
-
     List<Recognition> updatedRecognitions;
+    ColorSensor colorSensor;
     DcMotor frMotor, flMotor, brMotor, blMotor;
     String box;
-    Servo wobbleArmServo;
-    DcMotor verticalLeft, verticalRight, horizontal;
-
-    OdometryGlobalCoordinatePosition globalPositionUpdate;
-
-    String rfName = "frontright", rbName = "backright", lfName = "frontleft", lbName = "backleft";
-    String verticalLeftEncoderName = rbName, verticalRightEncoderName = lfName, horizontalEncoderName = rfName;
     /*
      * IMPORTANT: You need to obtain your own license key to use Vuforia. The string below with which
      * 'parameters.vuforiaLicenseKey' is initialized is for illustration only, and will not function.
@@ -113,12 +98,14 @@ public class TFOdometry extends LinearOpMode {
         // first.
         initVuforia();
         initTfod();
-
-
-        //wobbleArmServo = hardwareMap.get(Servo.class, "armServo");
+        frMotor = hardwareMap.dcMotor.get("frontright");
+        flMotor = hardwareMap.dcMotor.get("frontleft");
+        brMotor = hardwareMap.dcMotor.get("backright");
+        blMotor = hardwareMap.dcMotor.get("backleft");
+        colorSensor = hardwareMap.colorSensor.get("colorSensor");
         //variableNameForServo = hardwareMap.get(Servo.class, "servoConfigurationName");
-        initDriveHardwareMap(rfName, rbName, lfName, lbName, verticalLeftEncoderName, verticalRightEncoderName, horizontalEncoderName);
-
+        flMotor.setDirection(DcMotor.Direction.REVERSE);
+        blMotor.setDirection(DcMotor.Direction.REVERSE);
 
         /**
          * Activate TensorFlow Object Detection before we wait for the start command.
@@ -181,42 +168,151 @@ public class TFOdometry extends LinearOpMode {
         timer.reset();
 
         if (opModeIsActive()) { // Linear OpMode
-            globalPositionUpdate = new OdometryGlobalCoordinatePosition(verticalLeft, verticalRight, horizontal, COUNTS_PER_INCH, 75, 111, 8.5, 0.0);
-            Thread positionThread = new Thread(globalPositionUpdate);
-            positionThread.start();
 
-            globalPositionUpdate.reverseRightEncoder();
-            globalPositionUpdate.reverseNormalEncoder();
-
-            if (box == "a") {
-                goToPosition(118,83,.9,0,0.1);// box a
-                zero();
+            while (opModeIsActive() && timer.time() < 3)
+            {
+                frMotor.setPower(0);
+                blMotor.setPower(0);
+                flMotor.setPower(.7);
+                brMotor.setPower(.7);
             }
-            else if (box == "b" || box == "c") {
-                goToPosition(123,31,.9,0, .1); // First movement out of starting postition to strafe to the first box
-                zero();
-                if (box == "b") {
-                    goToPosition(97,103,.9,0,.1);// box b
-                    zero();
+            timer.reset();
+            int counter = 0;
+            while (opModeIsActive() && colorSensor.red()<120)
+            {
+                frMotor.setPower(.7);
+                blMotor.setPower(.7);
+                flMotor.setPower(.7);
+                brMotor.setPower(.7);
+            }
+            timer.reset();
+            frMotor.setPower(0);
+            blMotor.setPower(0);
+            flMotor.setPower(0);
+            brMotor.setPower(0);
+            while (opModeIsActive() && timer.time() < 1)
+            {
+
+            }
+            timer.reset();
+            telemetry.update();
+            if (box == "b") {
+                while (opModeIsActive() && timer.time() < 3) {
+                    frMotor.setPower(.7);
+                    blMotor.setPower(.7);
+                    flMotor.setPower(-.7);
+                    brMotor.setPower(-.7);
                 }
-                else
-                {//box c
-                    goToPosition(119,130,.9,0,.1);
-                    zero();
+                timer.reset();
+
+                int numRedLines = 0;
+                int[] colorValues = {0, 0, 0, 0, 0};
+                while (opModeIsActive() && numRedLines<1)
+                {
+                    colorValues[0] = colorValues[1];
+                    colorValues[1] = colorValues[2];
+                    colorValues[2] = colorValues[3];
+                    colorValues[3] = colorValues[4];
+                    colorValues[4] = colorSensor.alpha();
+                    frMotor.setPower(.7);
+                    blMotor.setPower(.7);
+                    flMotor.setPower(.7);
+                    brMotor.setPower(.7);
+                    if(IsValidLine(colorValues))
+                    {
+                        while(opModeIsActive()&&IsValidLine(colorValues))
+                        {
+                            colorValues[0] = colorValues[1];
+                            colorValues[1] = colorValues[2];
+                            colorValues[2] = colorValues[3];
+                            colorValues[3] = colorValues[4];
+                            colorValues[4] = colorSensor.alpha();
+                        }
+                        numRedLines++;
+                    }
+                    telemetry.addData("Lines: ",numRedLines);
+                    telemetry.addData("Red value: ", colorSensor.red());
+                    telemetry.update();
+
                 }
             }
+            else
+            {//box c
+                int numRedLines = 0;
+                int[] colorValues = {0, 0, 0, 0, 0};
+                while (opModeIsActive() && numRedLines<2)
+                {
+                    colorValues[0] = colorValues[1];
+                    colorValues[1] = colorValues[2];
+                    colorValues[2] = colorValues[3];
+                    colorValues[3] = colorValues[4];
+                    colorValues[4] = colorSensor.alpha();
+                    frMotor.setPower(.7);
+                    blMotor.setPower(.7);
+                    flMotor.setPower(.7);
+                    brMotor.setPower(.7);
+                    if(IsValidLine(colorValues))
+                    {
+                        while(opModeIsActive()&&IsValidLine(colorValues))
+                        {
+                            colorValues[0] = colorValues[1];
+                            colorValues[1] = colorValues[2];
+                            colorValues[2] = colorValues[3];
+                            colorValues[3] = colorValues[4];
+                            colorValues[4] = colorSensor.alpha();
+                        }
+                        numRedLines++;
+                    }
+                    telemetry.addData("Lines: ",numRedLines);
+                    telemetry.addData("Red value: ", colorSensor.red());
+                    telemetry.update();
 
-            //wobbleArmServo.setPosition(1);//drop wobble goal ***Change servo position maybe***
+                }
+                telemetry.addData("Red value counter: ",numRedLines);
+            }
+
+            //drop wobble goal
             //variableNameForServo.setPosition(1);
-            //goToPosition(1,1,1,1,1);//****CHANGE VALUES**** move to behind white Line and to correct shooting alignment
 
-            //zero();
+            //move to behind white Line
+            if (box=="b" || box =="c")
+            {
+                while(opModeIsActive()&& colorSensor.alpha()<500)
+                {
+                    frMotor.setPower(-.7);
+                    blMotor.setPower(-.7);
+                    flMotor.setPower(-.7);
+                    brMotor.setPower(-.7);
+                }
+                timer.reset();
+                while (opModeIsActive() && timer.time() <2) // move farther behind white line; could be written using odometry
+                {
+                    frMotor.setPower(-.7);
+                    blMotor.setPower(-.7);
+                    flMotor.setPower(-.7);
+                    brMotor.setPower(-.7);
+                }
+                timer.reset();
+                /*
+                while(opModeIsActive()&&timer.time()<2){
+                    launcherR.setPower(1);
+                    launcherL.setPower(1);
+                }
+
+
+                */
+            }
+            //if(box=="a" )
+
+            frMotor.setPower(0);
+            blMotor.setPower(0);
+            flMotor.setPower(0);
+            brMotor.setPower(0);
 
         }
         if (tfod != null) { //stop button
             tfod.shutdown();
         }
-        globalPositionUpdate.stop();
     }
 
     /**
@@ -249,128 +345,15 @@ public class TFOdometry extends LinearOpMode {
         tfod.loadModelFromAsset(TFOD_MODEL_ASSET, LABEL_FIRST_ELEMENT, LABEL_SECOND_ELEMENT);
     }
 
-    public void goToPosition(double targetXPosition, double targetYPosition, double robotPower, double desiredRobotOrientation, double allowableDistanceError ){
-        targetXPosition *= COUNTS_PER_INCH;
-        targetYPosition *= COUNTS_PER_INCH;
-        allowableDistanceError *= COUNTS_PER_INCH;
-        double blPower = 0; // motor speed
-        double brPower = 0; // motor speed
-        double flPower = 0; // motor speed
-        double frPower = 0; // motor speed
-        double pivotCorrectionAdj = .01; // constant to scale down pivot correction angle to work with setting powers for mecanum drive motors
-        double distanceToXTarget = targetXPosition - globalPositionUpdate.returnXCoordinate();
-        double distanceToYTarget = targetYPosition - globalPositionUpdate.returnYCoordinate();
-        double distance = Math.hypot(distanceToXTarget, distanceToYTarget);
-        while (opModeIsActive() && distance > allowableDistanceError) {
-            distance = Math.hypot(distanceToXTarget, distanceToYTarget);
-            distanceToXTarget = targetXPosition - globalPositionUpdate.returnXCoordinate();
-            distanceToYTarget = targetYPosition - globalPositionUpdate.returnYCoordinate();
-            double robotMovementAngle = Math.toDegrees(Math.atan2(distanceToXTarget, distanceToYTarget));
-            double robotMovmentXComponent = calculateX(robotMovementAngle - globalPositionUpdate.returnOrientation(), robotPower);
-            double robotMovmentYComponent = calculateY(robotMovementAngle - globalPositionUpdate.returnOrientation(), robotPower);
-            double pivotCorrection = (desiredRobotOrientation - globalPositionUpdate.returnOrientation())*pivotCorrectionAdj;
-            //double[] powers = {robotMovmentYComponent, robotMovmentYComponent, robotMovmentYComponent, robotMovmentYComponent};//array for powers
-            blPower = robotMovmentYComponent - robotMovmentXComponent + pivotCorrection;
-            flPower = robotMovmentYComponent + robotMovmentXComponent + pivotCorrection;
-            brPower = robotMovmentYComponent + robotMovmentXComponent - pivotCorrection;
-            frPower = robotMovmentYComponent - robotMovmentXComponent - pivotCorrection;
-            //set powers to motors to move
-            double maxMotorPower = Math.max(Math.max(Math.max(Math.abs(flPower), Math.abs(frPower)), Math.abs(blPower)), Math.abs(brPower));
-
-            if (Math.abs(maxMotorPower) > 1) {
-                flPower = (flPower / maxMotorPower)*robotPower;
-                frPower = (frPower / maxMotorPower) *robotPower;
-                blPower = (blPower / maxMotorPower) *robotPower;
-                brPower = (brPower / maxMotorPower)*robotPower;
-            } else if(Math.abs(maxMotorPower) < .03) {
-                flPower = 0;
-                frPower = 0;
-                blPower = 0;
-                brPower = 0;
+    private boolean isOnLineEdge(int[] lastReads) {
+        return true;
+    }
+    private boolean IsValidLine (int[] colorValue){
+        for (int i=0; i<colorValue.length; i ++){
+            if (colorValue[i] > 280 || colorValue[i] < 210) {
+                return false;
             }
-            flMotor.setPower(flPower);
-            frMotor.setPower(frPower);
-            blMotor.setPower(blPower);
-            brMotor.setPower(brPower);
-            telemetry.addData("X Position", globalPositionUpdate.returnXCoordinate() / COUNTS_PER_INCH);
-            telemetry.addData("Y Position", globalPositionUpdate.returnYCoordinate() / COUNTS_PER_INCH);
-            telemetry.addData("Orientation (Degrees)", globalPositionUpdate.returnOrientation());
-            telemetry.addData("XComponent: ", robotMovmentXComponent/.9);
-            telemetry.addData("YComponent: ", robotMovmentYComponent/.9);
-            telemetry.addData("Pivot Correction: ", pivotCorrection);
-            telemetry.update();
         }
+        return true;
     }
-
-
-    private void initDriveHardwareMap(String rfName, String rbName, String lfName, String lbName, String vlEncoderName, String vrEncoderName, String hEncoderName){
-        frMotor = hardwareMap.dcMotor.get(rfName);
-        flMotor = hardwareMap.dcMotor.get(lfName);
-        brMotor = hardwareMap.dcMotor.get(rbName);
-        blMotor = hardwareMap.dcMotor.get(lbName);
-        //Log.i("tobor", "done with get" );
-        verticalLeft = hardwareMap.dcMotor.get("backright");
-        verticalRight = hardwareMap.dcMotor.get("frontleft");
-        horizontal = hardwareMap.dcMotor.get("frontright");
-        Log.i("tobor1", "done with get" );
-
-        frMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        brMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        flMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        blMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-
-        frMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        brMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        flMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        blMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-
-        verticalLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        verticalRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        horizontal.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-
-        verticalLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        verticalRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        horizontal.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-
-
-        frMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        brMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        flMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        blMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-
-        flMotor.setDirection(DcMotorSimple.Direction.REVERSE);
-        blMotor.setDirection(DcMotorSimple.Direction.REVERSE);
-        //brMotor.setDirection(DcMotorSimple.Direction.REVERSE);
-
-        telemetry.addData("Status", "Hardware Map Init Complete");
-        telemetry.update();
-    }
-
-    /**
-     * Calculate the power in the x direction
-     * @param desiredAngle angle on the x axis
-     * @param speed robot's speed
-     * @return the x vector
-     */
-    private double calculateX(double desiredAngle, double speed) {
-        return Math.sin(Math.toRadians(desiredAngle)) * speed;
-    }
-
-    /**
-     * Calculate the power in the y direction
-     * @param desiredAngle angle on the y axis
-     * @param speed robot's speed
-     * @return the y vector
-     */
-    private double calculateY(double desiredAngle, double speed) {
-        return Math.cos(Math.toRadians(desiredAngle)) * speed;
-    }
-    private void zero()
-    {
-        frMotor.setPower(0);
-        blMotor.setPower(0);
-        flMotor.setPower(0);
-        brMotor.setPower(0);
-    }
-
 }
