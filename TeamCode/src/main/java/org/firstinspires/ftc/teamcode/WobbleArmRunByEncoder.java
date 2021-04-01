@@ -71,7 +71,7 @@ public class WobbleArmRunByEncoder extends LinearOpMode {
     private static final String LABEL_FIRST_ELEMENT = "Quad";
     private static final String LABEL_SECOND_ELEMENT = "Single";
     private ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.SECONDS);
-
+    String arthur = "arthur";
     /* Encoder Variables to use Counts per inch on Odometry and conveyance middle wheel */
     final double COUNTS_PER_REV = 8192; // CPR for REV Through Bore Encoders
     final double WHEEL_DIAMETER = 2.3622; //in inches, 38mm for odometry aluminum omni wheels
