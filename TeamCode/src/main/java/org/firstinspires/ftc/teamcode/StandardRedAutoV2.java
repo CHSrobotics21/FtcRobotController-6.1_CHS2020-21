@@ -71,7 +71,7 @@ public class StandardRedAutoV2 extends LinearOpMode {
     private static final String TFOD_MODEL_ASSET = "UltimateGoal.tflite";
     private static final String LABEL_FIRST_ELEMENT = "Quad";
     private static final String LABEL_SECOND_ELEMENT = "Single";
-    private ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.SECONDS), powershotTimer = new ElapsedTime(ElapsedTime.Resolution.SECONDS);
+    private ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.SECONDS), powershotTimer = new ElapsedTime(ElapsedTime.Resolution.SECONDS), strafeTimer = new ElapsedTime(ElapsedTime.Resolution.SECONDS);
 
     /* Encoder Variables to use Counts per inch on Odometry and conveyance middle wheel */
     final double COUNTS_PER_REV = 8192; // CPR for REV Through Bore Encoders
@@ -231,8 +231,27 @@ public class StandardRedAutoV2 extends LinearOpMode {
 //              wobbleArmHingeL.setPower(0);
 //              wobbleArmHingeR.setPower(0);
              sleep(500);
-             goToPositionSetZero(70, 66, .5, 0, 4);
-             goToPositionSlowDown(76, 17, .4, 0, 1);
+             goToPositionSetZero(60, 17, .6, 0, 4);// close to back corner
+            timer.reset();
+            while(strafeTimer.time()<2) //strafe into back wall to reset odometry
+            {
+                frMotor.setPower(0);
+                flMotor.setPower(-.8);
+                brMotor.setPower(-.8);
+                blMotor.setPower(0);
+            }
+            flMotor.setPower(0);
+            brMotor.setPower(0);
+            verticalLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            verticalRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            horizontal.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+            verticalLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            verticalRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            horizontal.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            globalPositionUpdate = new OdometryGlobalCoordinatePosition(verticalLeft, verticalRight, horizontal, COUNTS_PER_INCH, 75, 54, 8.5, 0);
+
+//             goToPositionSlowDown(76, 17, .4, 0, 1);
              goToPositionSetZero(80,17,.40,0,1);
              grip(true);
              sleep(750);

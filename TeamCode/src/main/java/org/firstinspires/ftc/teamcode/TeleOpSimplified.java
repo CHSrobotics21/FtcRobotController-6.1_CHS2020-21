@@ -17,6 +17,13 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 @TeleOp(name = "teleOp")
 @Disabled
 public class TeleOpSimplified extends OpMode {
+    /*
+    Simplified tele op class that calls hardwareMapClass that has goToPosition, other methods, and a new hardware map class
+    This class also has a method called correct odometry where when the robot is driven into a corner and you press a
+    button on the dpad (gamepad1), it attempts to reset the position of the robot to the correct coordinates of those
+    corners so that the robot can line up in the right positions more accurately
+    4/2/21
+     */
     HardwareMapClass robo= new HardwareMapClass();
     private ElapsedTime runtime = new ElapsedTime(ElapsedTime.Resolution.SECONDS), timer = new ElapsedTime(ElapsedTime.Resolution.SECONDS);
     double x, y, joystickAngle, joystickAngle360,  fieldReference = 0, frPower=0, flPower=0, brPower=0, blPower=0, maxMotorPower=0, driveSpeed = 0, driveRotation = 0;
@@ -27,6 +34,8 @@ public class TeleOpSimplified extends OpMode {
     public void init() {
 
         robo.init(hardwareMap);
+        robo.globalPositionUpdate = new OdometryGlobalCoordinatePosition(robo.verticalLeft, robo.verticalRight, robo.horizontal, robo.COUNTS_PER_INCH, 75, robo.startX, robo.startY, robo.startOrientation);
+
 
         telemetry.addData("Status", "Initialized");
 
@@ -57,8 +66,23 @@ public class TeleOpSimplified extends OpMode {
     public void loop() {
         robo.gyroAngles = robo.imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
         isWheelRunning = robo.collectorWheel.getPower() != 0;
+
+        if(gamepad1.dpad_up){
+            correctOdometry(54, 128);//remote upper left corner
+        }
+        else if(gamepad1.dpad_right){
+            correctOdometry(128, 128);//remote upper right corner
+        }
+        else if(gamepad1.dpad_left)
+        {
+            correctOdometry(54, 8.5);//remote lower left corner
+        }
+        else if(gamepad1.dpad_down){
+            correctOdometry(128,8.5);//remote lower right corner
+        }
+
         if(gamepad2.left_bumper){
-            robo.collectorWheelRun(-1); //run collector wheel towards launcher
+            robo.collectorWheelRun(-1); //run collector wheel(with power; method runs set mode run without encoders) towards launcher
         }
         else if(gamepad2.left_trigger>.05){
             robo.collectorWheelRun(1); //reverse collector wheel run
@@ -171,7 +195,7 @@ public class TeleOpSimplified extends OpMode {
 
         if(!lockDrive)
         {
-            if(gamepad1.x){
+            if(gamepad1.x){ //change powershot positions to what the best way to score them is like angled or just one position where you would change the angle for each powershot
                 robo.goToPositionSlowDown(89, 67, .7, 0, 2);//powershot 1
             }
             else if(gamepad1.a){
@@ -310,5 +334,16 @@ public class TeleOpSimplified extends OpMode {
             robo.launcherAngleR.setPosition(servoAngle);
             robo.launcherAngle.setPosition(servoAngle);
         }
+    }
+    public void correctOdometry(double cornerX, double cornerY){
+        robo.verticalLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        robo.verticalRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        robo.horizontal.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+        robo.verticalLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        robo.verticalRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        robo.horizontal.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        robo.globalPositionUpdate = new OdometryGlobalCoordinatePosition(robo.verticalLeft, robo.verticalRight, robo.horizontal, robo.COUNTS_PER_INCH, 75, cornerX, cornerY, 0);
+
     }
 }
