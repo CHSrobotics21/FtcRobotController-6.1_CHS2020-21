@@ -8,11 +8,15 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
+import com.qualcomm.robotcore.util.ReadWriteFile;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
+
+import java.io.File;
 
 @TeleOp(name = "teleOp")
 @Disabled
@@ -29,19 +33,32 @@ public class TeleOpSimplified extends OpMode {
     double x, y, joystickAngle, joystickAngle360,  fieldReference = 0, frPower=0, flPower=0, brPower=0, blPower=0, maxMotorPower=0, driveSpeed = 0, driveRotation = 0;
     int rings = 0;
     boolean robotPerspective = false, ringStopperToggle = false, ringStopperCanToggle = true, topPrevious = false, topCurrent = false, isWheelRunning = false, lockDrive = false, launchToggle = false, gripToggle = false, collectorToggle = false, collectorCanToggle = true, collectorReverseCanToggle = true, collectorReverseToggle = true, launcherCanToggle = true, gripCanToggle = true;
+    public Double startX, startY, startOrientation;
 
     @Override
     public void init() {
 
         robo.init(hardwareMap);
-        robo.globalPositionUpdate = new OdometryGlobalCoordinatePosition(robo.verticalLeft, robo.verticalRight, robo.horizontal, robo.COUNTS_PER_INCH, 75, robo.startX, robo.startY, robo.startOrientation);
+        File TeleOpStartingPos = AppUtil.getInstance().getSettingsFile("TeleOpStartingPos.txt");
+        String fileContents = ReadWriteFile.readFile(TeleOpStartingPos).trim();
+        String[] array = fileContents.split(" ");
+        startX = Double.parseDouble(array[0]);
+        startY = Double.parseDouble(array[1]);
+        startOrientation = Double.parseDouble(array[2]);
+        robo.globalPositionUpdate = new OdometryGlobalCoordinatePosition(robo.verticalLeft, robo.verticalRight, robo.horizontal, robo.COUNTS_PER_INCH, 75, startX, startY, startOrientation);
+        robo.positionThread = new Thread(robo.globalPositionUpdate);
 
+        robo.positionThread.start();
+
+        robo.globalPositionUpdate.reverseRightEncoder();
+        robo.globalPositionUpdate.reverseLeftEncoder();
+        robo.ringStopper.setPosition(0);
 
         telemetry.addData("Status", "Initialized");
 
-        telemetry.addData("StartingPostionX", robo.startX);
-        telemetry.addData("StartingPostionY", robo.startY);
-        telemetry.addData("StartingOrientation", robo.startOrientation);
+        telemetry.addData("StartingPostionX", startX);
+        telemetry.addData("StartingPostionY", startY);
+        telemetry.addData("StartingOrientation", startOrientation);
         telemetry.update();
     }
 
@@ -49,9 +66,9 @@ public class TeleOpSimplified extends OpMode {
     @Override
     public void init_loop() {
         robo.gyroAngles = robo.imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
-        telemetry.addData("StartingPostionX", robo.startX);
-        telemetry.addData("StartingPostionY", robo.startY);
-        telemetry.addData("StartingOrientation", robo.startOrientation);
+        telemetry.addData("StartingPostionX", startX);
+        telemetry.addData("StartingPostionY", startY);
+        telemetry.addData("StartingOrientation", startOrientation);
         telemetry.update();
     }
 

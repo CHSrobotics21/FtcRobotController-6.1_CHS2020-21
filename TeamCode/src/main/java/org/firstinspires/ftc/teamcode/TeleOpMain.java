@@ -62,7 +62,7 @@ import java.io.File;
  */
 @TeleOp(name = "Standard Tele Op", group = "Example")
 //@Disabled
-public class StandardTeleOpV2 extends OpMode {
+public class TeleOpMain extends OpMode {
 
     private ElapsedTime runtime = new ElapsedTime(ElapsedTime.Resolution.SECONDS);
     private ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.SECONDS);

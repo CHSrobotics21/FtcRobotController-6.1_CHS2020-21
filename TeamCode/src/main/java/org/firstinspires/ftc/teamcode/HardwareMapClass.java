@@ -34,7 +34,7 @@ public class HardwareMapClass {
     public CRServo wobbleArmHingeL=null, wobbleArmHingeR=null;
     public BNO055IMU imu=null;
     public DistanceSensor intakeDistanceSensor=null, ringStopperSensor=null;
-    public Double startX, startY, startOrientation;
+
     double desiredRobotHeading;
     int rotations = 0;
 
@@ -89,9 +89,12 @@ public class HardwareMapClass {
         parameters.angleUnit = BNO055IMU.AngleUnit.DEGREES;
         imu = hwMap.get(BNO055IMU.class, "imu");
         imu.initialize(parameters);
-        ringStopper.setPosition(0);
+
 
     }
+    /*
+    Go to position for iterative
+     */
     public boolean goToPosition(double targetXPosition, double targetYPosition, double robotPower, double desiredRobotOrientation, double allowableDistanceError ) {
         targetXPosition *= COUNTS_PER_INCH;
         isGoToPosition = true;
@@ -148,6 +151,65 @@ public class HardwareMapClass {
         if (goToPosition(targetXPosition,targetYPosition,robotPower-.3,desiredRobotOrientation,1)) {}
 
     }
+    /*
+    go to position for linear
+     */
+    public void goToPosition(double targetXPosition, double targetYPosition, double robotPower, double desiredRobotOrientation, double allowableDistanceError, boolean isLinear ){
+        targetXPosition *= COUNTS_PER_INCH;
+        targetYPosition *= COUNTS_PER_INCH;
+        allowableDistanceError *= COUNTS_PER_INCH;
+        double blPower = 0; // motor speed
+        double brPower = 0; // motor speed
+        double flPower = 0; // motor speed
+        double frPower = 0; // motor speed
+        double pivotCorrectionAdj = .01; // constant to scale down pivot correction angle to work with setting powers for mecanum drive motors
+        double distanceToXTarget = targetXPosition - globalPositionUpdate.returnXCoordinate();
+        double distanceToYTarget = targetYPosition - globalPositionUpdate.returnYCoordinate();
+        double distance = Math.hypot(distanceToXTarget, distanceToYTarget);
+        while (isLinear && distance > allowableDistanceError ) { //correct heading too
+            distance = Math.hypot(distanceToXTarget, distanceToYTarget);
+            distanceToXTarget = targetXPosition - globalPositionUpdate.returnXCoordinate();
+            distanceToYTarget = targetYPosition - globalPositionUpdate.returnYCoordinate();
+            double robotMovementAngle = Math.toDegrees(Math.atan2(distanceToXTarget, distanceToYTarget));
+            double robotMovmentXComponent = calculateX(robotMovementAngle - globalPositionUpdate.returnOrientation(), robotPower);
+            double robotMovmentYComponent = calculateY(robotMovementAngle - globalPositionUpdate.returnOrientation(), robotPower);
+            double pivotCorrection = (desiredRobotOrientation - globalPositionUpdate.returnOrientation())*pivotCorrectionAdj;
+            blPower = robotMovmentYComponent - robotMovmentXComponent + pivotCorrection;
+            flPower = robotMovmentYComponent + robotMovmentXComponent + pivotCorrection;
+            brPower = robotMovmentYComponent + robotMovmentXComponent - pivotCorrection;
+            frPower = robotMovmentYComponent - robotMovmentXComponent - pivotCorrection;
+            //set powers to motors to move
+            double maxMotorPower = Math.max(Math.max(Math.max(Math.abs(flPower), Math.abs(frPower)), Math.abs(blPower)), Math.abs(brPower));
+
+            if (Math.abs(maxMotorPower) > 1) {
+                flPower = (flPower / maxMotorPower)*robotPower;
+                frPower = (frPower / maxMotorPower) *robotPower;
+                blPower = (blPower / maxMotorPower) *robotPower;
+                brPower = (brPower / maxMotorPower)*robotPower;
+            } else if(Math.abs(maxMotorPower) < .03) {
+                flPower = 0;
+                frPower = 0;
+                blPower = 0;
+                brPower = 0;
+            }
+            flMotor.setPower(flPower);
+            frMotor.setPower(frPower);
+            blMotor.setPower(blPower);
+            brMotor.setPower(brPower);
+        }
+    }
+    public void goToPositionSetZero(double targetXPosition, double targetYPosition, double robotPower, double desiredRobotOrientation, double allowableDistanceError, boolean isLinear ){
+        goToPosition(targetXPosition, targetYPosition, robotPower, desiredRobotOrientation, allowableDistanceError, isLinear);
+        frMotor.setPower(0);
+        blMotor.setPower(0);
+        flMotor.setPower(0);
+        brMotor.setPower(0);
+    }
+    public void goToPositionSlowDown(double targetXPosition, double targetYPosition, double robotPower, double desiredRobotOrientation, boolean isLinear ){
+        goToPositionSetZero(targetXPosition,targetYPosition,robotPower,desiredRobotOrientation,8, isLinear);
+        goToPositionSetZero(targetXPosition,targetYPosition,robotPower-.3,desiredRobotOrientation,1.2, isLinear);
+    }
+
     private double calculateX(double desiredAngle, double speed) {
         return Math.sin(Math.toRadians(desiredAngle)) * speed;
     }
