@@ -91,7 +91,6 @@ public class StandardRedAuto extends LinearOpMode {
     DcMotor verticalLeft, verticalRight, horizontal;
     DcMotorEx launcherR, launcherL;
     DigitalChannel gripSwitch, armSwitch;
-    VoltageSensor volts;
     DistanceSensor distanceSensor, ringStopperSensor;
     String ringFileContents = "";
     int x = 101;

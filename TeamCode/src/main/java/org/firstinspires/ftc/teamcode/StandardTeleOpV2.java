@@ -93,7 +93,6 @@ public class StandardTeleOpV2 extends OpMode {
     OdometryGlobalCoordinatePosition globalPositionUpdate;
 
     Thread positionThread;
-    Thread wheelThread;
     boolean buttonPressed = false;
     boolean AIlaunch = false;
     double servoAdd = .4;
