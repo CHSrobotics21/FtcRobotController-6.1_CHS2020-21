@@ -93,6 +93,7 @@ public class StandardRedAuto extends LinearOpMode {
     DigitalChannel gripSwitch, armSwitch;
     VoltageSensor volts;
     DistanceSensor distanceSensor, ringStopperSensor;
+    String ringFileContents = "";
     int x = 101;
     int i = 0;
     boolean ringIsSensed = false;
@@ -180,7 +181,6 @@ public class StandardRedAuto extends LinearOpMode {
                            } else {
                                box = "a"; 
                            }
-                           //launchPower=(volts.getVoltage());
                        }
 
                    }
@@ -208,46 +208,29 @@ public class StandardRedAuto extends LinearOpMode {
 
             //**GO TO BOX INSTRUCTIONS + DELIVER WOBBLE GOAL TO CORRECT BOX**
              goToBoxDeliverWobble(123,31,true, 0);
-             sleep(1500);
-            launch();
-            sleep(1000);
-            powershot();
-            collector.setPower(-1);
-            powershot();
-            powershot();
-            collector.setPower(0);
-            collectorWheel.setPower(0);
+             sleep(1000);
+            launch(); //start launcher motors
+            sleep(750); //make sure launchers are powered up enough
+            powershot(); // first powershot
+//            collector.setPower(-1);
+            powershot(); // second powershot
+            powershot(); // third powershot
+//            collector.setPower(0);
+            collectorWheel.setPower(0); // stop collector wheel in case it is still running
              /*^end of powershot shooting^*/
-
-             /*go back to get 2nd wobble goal (where we think it's gonna be- tolerance could interrupt movements) while leaving the wobble goal arm out
-                so we can get a grip from the right side of the robot
-                incorporate sensor to detect if the robot has actually gotten grip on the wobble goal
-                 inch foreward to make sure of grip
-                  */
-
-             launchSetZero();
-//              wobbleArmHingeL.setPower(-1);
-//              wobbleArmHingeR.setPower(1);
-//              sleep(200);
-//              wobbleArmHingeL.setPower(0);
-//              wobbleArmHingeR.setPower(0);
-             sleep(500);
-             goToPositionSetZero(70, 66.5, .5, 0, 3);
-             goToPositionSlowDown(70, 13, .5, 0, 8);
-             goToPositionSetZero(82, 15, .4, 0, 1);
-             grip(true);
-             sleep(750);
-             goToBoxDeliverWobble(76.5, 61, false, 6);
-             sleep(750);
+             launchSetZero(); // stop launchers
+             goToPositionSetZero(70, 66.5, .5, 0, 3);//go sideways to position far left from wobble goal
+             goToPositionSlowDown(70, 13, .5, 0, 8);//go backwards a little far away from wobble goal
+             goToPositionSetZero(82, 15, .4, 0, 1);//go right towards wobble goal to grip
+             grip(true);// grip wobble goal
+             sleep(750);// make sure wobble goal is gripped
+             goToBoxDeliverWobble(76.5, 61, false, 6);//go back to box to deliver second wobble goal (go to position, lift arm higher, ungrip)
+             sleep(750);// make sure wobble goal is delivered
              goToPositionSetZero(80,80,.9,0,2);//parking behind white
 
-
             String ContentsToWriteToFile = (globalPositionUpdate.returnXCoordinate()/COUNTS_PER_INCH) + " " + (globalPositionUpdate.returnYCoordinate()/COUNTS_PER_INCH) + " " + (globalPositionUpdate.returnOrientation());
-
             ReadWriteFile.writeFile(TeleOpStartingPos, ContentsToWriteToFile);
-//            telemetry.addData("StartingPostionX", globalPositionUpdate.returnXCoordinate());
-//            telemetry.addData("StartingPostionY", globalPositionUpdate.returnYCoordinate());
-//            telemetry.addData("StartingOrientation", globalPositionUpdate.returnOrientation());
+            ReadWriteFile.writeFile(RingSensorData, ringFileContents);
 
             goToPositionSlowDown(111, 24, .6, 0, 2); // go back to starting position for programmers testing ease :)
 
@@ -397,7 +380,7 @@ public class StandardRedAuto extends LinearOpMode {
         verticalRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         horizontal.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
-        brMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        brMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER); //wobble arm encoder
         brMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         frMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -457,29 +440,12 @@ public class StandardRedAuto extends LinearOpMode {
         }
 
     }
-//    public void hinge(boolean p)
-//    {
-//        if (p)// bring down arm
-//        {
-//            wobbleArmHingeL.setPower(-1);
-//            wobbleArmHingeR.setPower(1);
-//            sleep(1500);
-//            wobbleArmHingeL.setPower(0);
-//            wobbleArmHingeR.setPower(0);
-//        }
-//        else {//bring arm back up
-//            wobbleArmHingeL.setPower(1); // open arm
-//            wobbleArmHingeR.setPower(-1); // open arm
-//            sleep(1500); // continue for a second
-//            wobbleArmHingeL.setPower(0); // stop servo
-//            wobbleArmHingeR.setPower(0); // open arm
-//        }
-//    }
     public void hinge(boolean p)
     {
         if (p)// bring down arm
         {
-            while(opModeIsActive()&&!(brMotor.getCurrentPosition()>-2900&&brMotor.getCurrentPosition()<-2700)) /*find threshold for when wobble goal arm is not down; don't want arm to be all the way down*/ {
+            while(opModeIsActive()&&!(brMotor.getCurrentPosition()>-2900&&brMotor.getCurrentPosition()<-2700))// threshold for mid location on wobble arm comind down; wobble goal arm starts at 0 at beginning
+            {
                 wobbleArmHingeL.setPower(-1);
                 wobbleArmHingeR.setPower(1);
                 telemetry.addData("Wobble counts", brMotor.getCurrentPosition());
@@ -497,9 +463,20 @@ public class StandardRedAuto extends LinearOpMode {
             wobbleArmHingeR.setPower(0);
         }
     }
+    public void hinge(int threshold){
+        while(opModeIsActive()&&!(brMotor.getCurrentPosition()>threshold&&brMotor.getCurrentPosition()<threshold+200)) //hinge arm at desired threshold
+        {
+            wobbleArmHingeL.setPower(1);
+            wobbleArmHingeR.setPower(-1);
+            telemetry.addData("Wobble counts", brMotor.getCurrentPosition());
+            telemetry.update();
+        }
+        wobbleArmHingeL.setPower(0) ;
+        wobbleArmHingeR.setPower(0);
+    }
 
     public void moveCollectorWheel(int inches)
-    { //place after go to position statements to shoot at power shot
+    { // move collector wheel using encoder
         collectorWheel.setTargetPosition(collectorWheel.getCurrentPosition()- (int)(inches*CPICollectorWheel)); // enter encoder counts or inches you want to move times counts per inch FOR THIS WHEEL AND MOTORS
         collectorWheel.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         collectorWheel.setPower(1);
@@ -519,14 +496,17 @@ public class StandardRedAuto extends LinearOpMode {
         else if (box == "b" || box == "c") {
                 goToPositionSetZero(goAroundRingsCoorX, goAroundRingsCoorY, .85, 0, 8); // First movement out of starting postition to strafe to the first box
                 if (box == "b") {
-                    goToPositionSlowDown(102-comeback, 103+comeback, .7, 0, 8);// box b
+                    goToPositionSlowDown(94-comeback, 103+comeback, .7, 0, 8);// box b
                 } else {//box c
-                    goToPositionSlowDown(115-comeback, 124+comeback, .7, 0, 8);
+                    goToPositionSlowDown(115-comeback, 127-comeback, .7, 0, 8);
                 }
             }
             if (doHingeArm) {
                 hinge(true);
             } //hinge arm out to deliver
+            else{
+                hinge(-2500); //second wobble goal bring arm a bit up
+            }
             grip(false); //ungrip wobble goal to release and deliver
 
         }
@@ -536,37 +516,35 @@ public class StandardRedAuto extends LinearOpMode {
     }
     public void powershot(){
         telemetry.addData("ring sensor: ", ringStopperSensor.getDistance(DistanceUnit.CM));
-         x -= 4;
-        goToPositionSetZero(x, 66.5, .35, -10, 1.5);// move to behind white Line and position in front of powershot for powershot 1
+         x -= 4; // change x position to make it to different powershots
+        goToPositionSetZero(x, 66.5, .35, -10, 1.5);// move to behind white Line and position in front of powershot for each one at an angle
         powershotTimer.reset();
-        if(x==97) {
-            while (opModeIsActive() && (ringStopperSensor.getDistance(DistanceUnit.CM) < 4.7&&powershotTimer.time()<2)) {
+        if(x==97) {// first powershot x coordinate
+            while (opModeIsActive() && (ringStopperSensor.getDistance(DistanceUnit.CM) < 4.7&&powershotTimer.time()<2)) {//ring is under distance sensor but deliver it to launcher
                 collectorWheel.setPower(-.9);
-//                telemetry.addData("ring stopper distance1: ", ringStopperSensor.getDistance(DistanceUnit.CM));
-//                telemetry.update();
-                ReadWriteFile.writeFile(RingSensorData, "first powershot data: "+ ringStopperSensor.getDistance(DistanceUnit.CM)+" cm");
+                ringFileContents += "first powershot data: "+ ringStopperSensor.getDistance(DistanceUnit.CM)+" cm"+ " \n";
             }
         }
+        // timers to make sure that the loop will not get caught if two rings are shot in the same loop
         else{
-            while(opModeIsActive() && (ringStopperSensor.getDistance(DistanceUnit.CM)>4.7&&powershotTimer.time()<2)){
+            while(opModeIsActive() && (ringStopperSensor.getDistance(DistanceUnit.CM)>4.7&&powershotTimer.time()<2)){//while ring is not under sensor, deliver to sensor (while loop ensures that the data is being updated and will stop when the ring is surely ready)
                 collectorWheel.setPower(-.9);
-//                telemetry.addData("ring stopper: ", ringStopperSensor.getDistance(DistanceUnit.CM));
-//                telemetry.update();
-                ReadWriteFile.writeFile(RingSensorData, "ring distance data not under sensor: "+ ringStopperSensor.getDistance(DistanceUnit.CM)+" cm");
+                ringFileContents += "ring distance data not under sensor: "+ ringStopperSensor.getDistance(DistanceUnit.CM)+" cm"+ " \n";
 
             }
             powershotTimer.reset();
             collectorWheel.setPower(0);
-            while (opModeIsActive() && (ringStopperSensor.getDistance(DistanceUnit.CM) < 4.7&&powershotTimer.time()<2)) {
+            while (opModeIsActive() && (ringStopperSensor.getDistance(DistanceUnit.CM) < 4.7&&powershotTimer.time()<2)) {//ring is under distance sensor but deliver it to launcher (while loop ensures that the ring is no longer in the system and is shot)
                 collectorWheel.setPower(-.9);
-//                telemetry.addData("ring stopper distance: ", ringStopperSensor.getDistance(DistanceUnit.CM));
-//                telemetry.update();
-                ReadWriteFile.writeFile(RingSensorData, "ring sensor data under sensor : "+ ringStopperSensor.getDistance(DistanceUnit.CM)+" cm");
+                ringFileContents+="ring sensor data under sensor : "+ ringStopperSensor.getDistance(DistanceUnit.CM)+" cm"+ " \n";
             }
         }
         collectorWheel.setPower(0);
-//        if(x > 89){
-//            sleep(250);
-//        }
+        /*possible fixes: use ring stopper servo in between loops
+        -hypothetically a distance sensor isn't necessary if you take the diameter of the ring and move the collector wheel that far with encoder to convey to the launcher as long as it consistently doesn't shoot more than one ring
+        -shooting from one position and changing the angle to get each position (requires quite a bit of testing)
+        -distance sensor if structure with move collector wheel encoder
+        -distance sensor while loops that stop collector wheel at certain condition instead of running the power for the conditions
+         */
     }
 }
