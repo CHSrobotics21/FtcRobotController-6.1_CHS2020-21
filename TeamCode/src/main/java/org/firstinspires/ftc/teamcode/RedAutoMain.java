@@ -210,18 +210,39 @@ public class RedAutoMain extends LinearOpMode {
              sleep(1000);
             launch(); //start launcher motors
             sleep(750); //make sure launchers are powered up enough
-            goToPositionSlowDown(105, 39, .7, 0, 2); //high tower goal
+            goToPositionSlowDown(105, 60, .7, -5, 2); //high tower goal
+            sleep(500);
 //            powershot(); // first powershot
 //            collector.setPower(-1);
 //            powershot(); // second powershot
 //            powershot(); // third powershot
 //            collector.setPower(0);
-            collectorWheel.setPower(-.9);
-            sleep(2500);
-            collectorWheel.setPower(0); // stop collector wheel in case it is still running
+            collectorWheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            while(opModeIsActive() && i<3) {
+
+                if(i>0){
+                    launcherL.setVelocity(425);
+                    launcherR.setVelocity(-400);
+                }
+                i++;
+                powershotTimer.reset();
+                while (opModeIsActive() && (ringStopperSensor.getDistance(DistanceUnit.CM) > 4.7 && powershotTimer.time() < 2)) {//while ring is not under sensor, deliver to sensor (while loop ensures that the data is being updated and will stop when the ring is surely ready)
+                    collectorWheel.setPower(-1);
+                }
+                powershotTimer.reset();
+                collectorWheel.setPower(0);
+                while (opModeIsActive() && (ringStopperSensor.getDistance(DistanceUnit.CM) < 4.7 && powershotTimer.time() < 2)) {//ring is under distance sensor but deliver it to launcher (while loop ensures that the ring is no longer in the system and is shot)
+                    collectorWheel.setPower(-1);
+                }
+                collectorWheel.setPower(0);
+                sleep(500);
+            }
+//            collectorWheel.setPower(-1);39
+//            sleep(5000);
+//            collectorWheel.setPower(0); // stop collector wheel in case it is still running
              /*^end of powershot shooting^*/
              launchSetZero(); // stop launchers
-             goToPositionSetZero(70, 66.5, .5, 0, 3);//go sideways to position far left from wobble goal
+             goToPositionSetZero(70, 57, .5, 0, 3);//go sideways to position far left from wobble goal
              goToPositionSlowDown(70, 13, .5, 0, 8);//go backwards a little far away from wobble goal
              goToPositionSetZero(82, 15, .4, 0, 1);//go right towards wobble goal to grip
              grip(true);// grip wobble goal
@@ -507,7 +528,9 @@ public class RedAutoMain extends LinearOpMode {
                 hinge(true);
             } //hinge arm out to deliver
             else{
-                hinge(-2500); //second wobble goal bring arm a bit up
+                if(box=="c") {
+                    hinge(-2900); //second wobble goal bring arm a bit up
+                }
             }
             grip(false); //ungrip wobble goal to release and deliver
 
