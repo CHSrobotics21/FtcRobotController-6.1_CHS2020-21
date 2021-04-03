@@ -120,6 +120,8 @@ public class TeleOpMain extends OpMode {
 
     boolean robotPerspective = false;
     double fieldReference = 0.0;
+    boolean perspectiveToggle = false;
+    boolean perspectiveCanToggle = false;
 
     @Override
     public void init() {
@@ -517,8 +519,28 @@ public class TeleOpMain extends OpMode {
         else {
             driveRotation = 0;
         }
-        if (gamepad1.dpad_up) {robotPerspective = true;}
-        if (gamepad1.dpad_down) {robotPerspective = false;}
+        if(gamepad1.right_bumper){
+            if(perspectiveCanToggle) //make sure that the code doesn't just toggle the thing every iteration as long as the trigger's held
+            {
+                perspectiveCanToggle=false;
+                if(perspectiveToggle)
+                {//if the motor is currently running, turn it off
+                    robotPerspective = true; //turn off the motor
+                    perspectiveToggle=false; //remember that the collector motor has been turned off
+                }
+                else
+                {//if the motor isn't currently running, turn it on
+                    robotPerspective = false; //turn on motor
+                    perspectiveToggle=true; //remember that the motor has been turned on
+                }
+            }
+        }
+        else
+        {
+            perspectiveCanToggle=true;
+        }
+//        if (gamepad1.dpad_up) {robotPerspective = true;}
+//        if (gamepad1.dpad_down) {robotPerspective = false;}
         if (robotPerspective) { //Controls are mapped to the robot perspective
             fieldReference = 0;
             //Positive values for x axis are joystick right

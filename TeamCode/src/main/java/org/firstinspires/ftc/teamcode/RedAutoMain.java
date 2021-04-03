@@ -210,11 +210,14 @@ public class RedAutoMain extends LinearOpMode {
              sleep(1000);
             launch(); //start launcher motors
             sleep(750); //make sure launchers are powered up enough
-            powershot(); // first powershot
+            goToPositionSlowDown(105, 39, .7, 0, 2); //high tower goal
+//            powershot(); // first powershot
 //            collector.setPower(-1);
-            powershot(); // second powershot
-            powershot(); // third powershot
+//            powershot(); // second powershot
+//            powershot(); // third powershot
 //            collector.setPower(0);
+            collectorWheel.setPower(-.9);
+            sleep(2500);
             collectorWheel.setPower(0); // stop collector wheel in case it is still running
              /*^end of powershot shooting^*/
              launchSetZero(); // stop launchers

@@ -92,7 +92,6 @@ public class Gwyn_EvieDriveMode extends OpMode {
     OdometryGlobalCoordinatePosition globalPositionUpdate;
 
     Thread positionThread;
-    boolean isWheelRunning = false;
     boolean islaunchRunning= false;
     boolean lockDrive = false;
     boolean isCollectorWheel = false;
@@ -114,6 +113,9 @@ public class Gwyn_EvieDriveMode extends OpMode {
 
     boolean robotPerspective = false;
     double fieldReference = 0.0;
+    boolean isWheelRunning = false;
+    boolean perspectiveCanToggle = false;
+    boolean perspectiveToggle = false;
 
     @Override
     public void init() {
@@ -217,17 +219,28 @@ public class Gwyn_EvieDriveMode extends OpMode {
     public void loop() {
 
         gyroAngles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
+        isWheelRunning = collectorWheel.getPower() != 0;
 
-
+        if(gamepad1.dpad_up){
+            correctOdometry(54, 128);//remote upper left corner
+        }
+        else if(gamepad1.dpad_right){
+            correctOdometry(128, 128);//remote upper right corner
+        }
+        else if(gamepad1.dpad_left)
+        {
+            correctOdometry(54, 8.5);//remote lower left corner
+        }
+        else if(gamepad1.dpad_down){
+            correctOdometry(128,8.5);//remote lower right corner
+        }
         if(gamepad2.left_bumper){
             collectorWheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
             collectorWheel.setPower(-1);
-            isWheelRunning = true;
         }
         else if(gamepad2.left_trigger>.05){
             collectorWheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
             collectorWheel.setPower(1);
-            isWheelRunning = true;
         }
         else if(intakeDistanceSensor.getDistance(DistanceUnit.INCH)<6.5&&intakeDistanceSensor.getDistance(DistanceUnit.INCH)>0 &&rings < 3){
             collectorWheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
@@ -237,7 +250,6 @@ public class Gwyn_EvieDriveMode extends OpMode {
         else{
             collectorWheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
             collectorWheel.setPower(0);
-            isWheelRunning = false;
         }
 
         if(timer.time()>2&&timer.time()<2.05){
@@ -252,7 +264,6 @@ public class Gwyn_EvieDriveMode extends OpMode {
         }
         if (ringStopperSensor.getDistance(DistanceUnit.CM)<4.6&&ringStopperSensor.getDistance(DistanceUnit.CM)>0 && islaunchRunning){
             moveCollectorWheel();
-            isWheelRunning = false;
         }
 
         if (gamepad2.dpad_up){
@@ -443,8 +454,28 @@ public class Gwyn_EvieDriveMode extends OpMode {
         else {
             driveRotation = 0;
         }
-        if (gamepad1.dpad_up) {robotPerspective = true;}
-        if (gamepad1.dpad_down) {robotPerspective = false;}
+        if(gamepad1.right_bumper){
+            if(perspectiveCanToggle) //make sure that the code doesn't just toggle the thing every iteration as long as the trigger's held
+            {
+                perspectiveCanToggle=false;
+                if(perspectiveToggle)
+                {//if the motor is currently running, turn it off
+                    robotPerspective = true; //turn off the motor
+                    perspectiveToggle=false; //remember that the collector motor has been turned off
+                }
+                else
+                {//if the motor isn't currently running, turn it on
+                    robotPerspective = false; //turn on motor
+                    perspectiveToggle=true; //remember that the motor has been turned on
+                }
+            }
+        }
+        else
+        {
+            perspectiveCanToggle=true;
+        }
+//        if (gamepad1.dpad_up) {robotPerspective = true;}
+//        if (gamepad1.dpad_down) {robotPerspective = false;}
         if (robotPerspective) { //Controls are mapped to the robot perspective
             fieldReference = 0;
             //Positive values for x axis are joystick right
@@ -703,5 +734,16 @@ public class Gwyn_EvieDriveMode extends OpMode {
          collectorWheel.setMode(DcMotor.RunMode.RUN_TO_POSITION);
          collectorWheel.setPower(-1);
      }
+    public void correctOdometry(double cornerX, double cornerY){
+        verticalLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        verticalRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        horizontal.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+        verticalLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        verticalRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        horizontal.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        globalPositionUpdate = new OdometryGlobalCoordinatePosition(verticalLeft, verticalRight, horizontal, COUNTS_PER_INCH, 75, cornerX, cornerY, 0);
+
+    }
 
 }
