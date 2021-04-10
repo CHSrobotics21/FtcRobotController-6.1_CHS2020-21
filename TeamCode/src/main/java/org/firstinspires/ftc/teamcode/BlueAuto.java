@@ -65,7 +65,7 @@ import java.util.List;
  * IMPORTANT: In order to use this OpMode, you need to obtain your own Vuforia license key as
  * is explained below.
  */
-@Autonomous(name = "RedAutoV3", group = "TFOdometry")
+@Autonomous(name = "Blue", group = "TFOdometry")
 //@Disabled
 public class BlueAuto extends LinearOpMode {
     private static final String TFOD_MODEL_ASSET = "UltimateGoal.tflite";
