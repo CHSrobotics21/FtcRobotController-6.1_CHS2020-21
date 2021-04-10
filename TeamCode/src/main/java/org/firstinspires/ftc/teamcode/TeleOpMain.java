@@ -108,6 +108,7 @@ public class TeleOpMain extends OpMode {
     boolean launcherCanToggle = true;
     boolean gripCanToggle = true;
     boolean isCollectorRunning = false;
+    boolean collectorReverseCanToggle = false, collectorReverseToggle = false;
     int rings = 0;
     boolean topCurrent = false;
     boolean topPrevious = false;
@@ -286,11 +287,11 @@ public class TeleOpMain extends OpMode {
             collectorWheel.setPower(-1);
             isWheelRunning = true;
         }
-        else if(intakeDistanceSensor.getDistance(DistanceUnit.INCH)<6.5&&intakeDistanceSensor.getDistance(DistanceUnit.INCH)>0 &&rings < 3){
-            collectorWheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-            collectorWheel.setPower(-1);
-            timer.reset();
-        }
+//        else if(intakeDistanceSensor.getDistance(DistanceUnit.INCH)<6.5&&intakeDistanceSensor.getDistance(DistanceUnit.INCH)>0 &&rings < 3){
+//            collectorWheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+//            collectorWheel.setPower(-1);
+//            timer.reset();
+//        }
         else if(gamepad2.right_bumper){
             collectorWheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
             collectorWheel.setPower(1);
@@ -301,21 +302,21 @@ public class TeleOpMain extends OpMode {
             collectorWheel.setPower(0);
             isWheelRunning = false;
         }
-
-        if(timer.time()>2&&timer.time()<2.05){
-            rings++;
-            collectorWheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-            collectorWheel.setPower(0);
-        }
-        topPrevious = topCurrent;
-        topCurrent = ringStopperSensor.getDistance(DistanceUnit.CM)<4.6&&ringStopperSensor.getDistance(DistanceUnit.CM)>0;
-        if (topPrevious && !topCurrent){
-            rings--;
-        }
-        if (ringStopperSensor.getDistance(DistanceUnit.CM)<4.6&&ringStopperSensor.getDistance(DistanceUnit.CM)>0 && islaunchRunning){
-            moveCollectorWheel();
-            isWheelRunning = false;
-        }
+//
+//        if(timer.time()>2&&timer.time()<2.05){
+//            rings++;
+//            collectorWheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+//            collectorWheel.setPower(0);
+//        }
+//        topPrevious = topCurrent;
+//        topCurrent = ringStopperSensor.getDistance(DistanceUnit.CM)<4.6&&ringStopperSensor.getDistance(DistanceUnit.CM)>0;
+//        if (topPrevious && !topCurrent){
+//            rings--;
+//        }
+//        if (ringStopperSensor.getDistance(DistanceUnit.CM)<4.6&&ringStopperSensor.getDistance(DistanceUnit.CM)>0 && islaunchRunning){
+//            moveCollectorWheel();
+//            isWheelRunning = false;
+//        }
 //        else if(gamepad2.left_trigger>.05){
 //            isWheelRunning = true;
 //            collectorwheelthread.moveCollectorWheel(8, false);
@@ -384,7 +385,28 @@ public class TeleOpMain extends OpMode {
         {
             collectorCanToggle=true;
         }
-
+        if(gamepad2.left_trigger>.05){
+            if(collectorReverseCanToggle) //make sure that the code doesn't just toggle the thing every iteration as long as the trigger's held
+            {
+                collectorReverseCanToggle=false;
+                //if the collector is currently running, run this code to turn it off:
+                if(collectorReverseToggle)
+                {
+                    collector.setPower(0); //turn off the collector motor
+                    collectorReverseToggle=false; //remember that the collector motor has been turned off
+                }
+                //if the collector isn't currently running, run this code to turn it on:
+                else
+                {
+                    collector.setPower(.9); //turn on the collector motor
+                    collectorReverseToggle=true; //remember that the collector motor has been turned on
+                }
+            }
+        }
+        else
+        {
+            collectorReverseCanToggle=true;
+        }
          if(gamepad2.x)
          {
              if(launcherCanToggle) //make sure that the code doesn't just toggle the thing every iteration as long as the x is held
