@@ -1,10 +1,12 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.other;
 
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+
+import org.firstinspires.ftc.teamcode.OdometryGlobalCoordinatePosition;
 
 /**
  * Created by Sarthak on 10/4/2019.
@@ -23,7 +25,7 @@ public class MyOdometryOpmode extends LinearOpMode {
     String rfName = "frontright", rbName = "backright", lfName = "frontleft", lbName = "backleft";
     String verticalLeftEncoderName = rbName, verticalRightEncoderName = lfName, horizontalEncoderName = rfName;
 
-    OdometryGlobalCoordinatePosition globalPositionUpdate;
+    OdometryGlobalCoordinatePositionOther globalPositionUpdate;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -35,7 +37,7 @@ public class MyOdometryOpmode extends LinearOpMode {
         waitForStart();
 
         //Create and start GlobalCoordinatePosition thread to constantly update the global coordinate positions
-        globalPositionUpdate = new OdometryGlobalCoordinatePosition(verticalLeft, verticalRight, horizontal, COUNTS_PER_INCH, 75, 111, 8.5, 0.0);
+        globalPositionUpdate = new OdometryGlobalCoordinatePositionOther(verticalLeft, verticalRight, horizontal, COUNTS_PER_INCH, 75, 111, 8.5, 0.0);
         Thread positionThread = new Thread(globalPositionUpdate);
         positionThread.start();
 

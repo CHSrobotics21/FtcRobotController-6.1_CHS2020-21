@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.other;
 
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -65,7 +65,7 @@ public class GlobalCoordinatePositionUpdateSample extends LinearOpMode {
          */
 
         //Create and start GlobalCoordinatePosition thread to constantly update the global coordinate positions\
-        OdometryGlobalCoordinatePosition globalPositionUpdate = new OdometryGlobalCoordinatePosition(verticalLeft, verticalRight, horizontal, COUNTS_PER_INCH, 75, 123, 83, 0.0);
+        OdometryGlobalCoordinatePositionOther globalPositionUpdate = new OdometryGlobalCoordinatePositionOther(verticalLeft, verticalRight, horizontal, COUNTS_PER_INCH, 75, 123, 83, 0.0);
         Thread positionThread = new Thread(globalPositionUpdate);
         positionThread.start();
 
