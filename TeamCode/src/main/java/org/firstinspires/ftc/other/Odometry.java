@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.other;
 
 import android.util.Log;
 
@@ -30,7 +30,7 @@ public class Odometry extends LinearOpMode {
     String rfName = "frontright", rbName = "backright", lfName = "frontleft", lbName = "backleft";
     String verticalLeftEncoderName = rbName, verticalRightEncoderName = lfName, horizontalEncoderName = rfName;
 
-    OdometryGlobalCoordinatePosition globalPositionUpdate;
+    OdometryGlobalCoordinatePositionOther globalPositionUpdate;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -41,7 +41,7 @@ public class Odometry extends LinearOpMode {
         telemetry.update();
         waitForStart();
         //Create and start GlobalCoordinatePosition thread to constantly update the global coordinate positions
-        globalPositionUpdate = new OdometryGlobalCoordinatePosition(verticalLeft, verticalRight, horizontal, COUNTS_PER_INCH, 75, 111, 8.5, 0.0);
+        globalPositionUpdate = new OdometryGlobalCoordinatePositionOther(verticalLeft, verticalRight, horizontal, COUNTS_PER_INCH, 75, 111, 8.5, 0.0);
         Thread positionThread = new Thread(globalPositionUpdate);
         positionThread.start();
 

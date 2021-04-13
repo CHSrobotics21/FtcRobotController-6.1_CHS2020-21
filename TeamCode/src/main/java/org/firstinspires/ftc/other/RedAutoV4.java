@@ -27,7 +27,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.other;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
@@ -94,7 +94,7 @@ public class RedAutoV4 extends LinearOpMode {
 
 
     File TeleOpStartingPos = AppUtil.getInstance().getSettingsFile("TeleOpStartingPos.txt");
-    OdometryGlobalCoordinatePosition globalPositionUpdate;
+    OdometryGlobalCoordinatePositionOther globalPositionUpdate;
 
 
 
@@ -188,7 +188,7 @@ public class RedAutoV4 extends LinearOpMode {
 
 
         if (opModeIsActive()) { // Linear OpMode
-            globalPositionUpdate = new OdometryGlobalCoordinatePosition(verticalLeft, verticalRight, horizontal, COUNTS_PER_INCH, 75, 111, 8.5, 0.0);
+            globalPositionUpdate = new OdometryGlobalCoordinatePositionOther(verticalLeft, verticalRight, horizontal, COUNTS_PER_INCH, 75, 111, 8.5, 0.0);
             Thread positionThread = new Thread(globalPositionUpdate);
             positionThread.start();
 
