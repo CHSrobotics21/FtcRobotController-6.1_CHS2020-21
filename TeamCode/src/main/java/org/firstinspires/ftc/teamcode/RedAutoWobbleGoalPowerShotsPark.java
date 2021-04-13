@@ -30,7 +30,6 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -39,7 +38,6 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.Servo;
-import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.ReadWriteFile;
 
@@ -65,9 +63,9 @@ import java.util.List;
  * IMPORTANT: In order to use this OpMode, you need to obtain your own Vuforia license key as
  * is explained below.
  */
-@Autonomous(name = "Red", group = "TFOdometry")
+@Autonomous(name = "RedAutoWobbleGoalPowershotsPark")
 //@Disabled
-public class RedAutoMain extends LinearOpMode {
+public class RedAutoWobbleGoalPowerShotsPark extends LinearOpMode {
     private static final String TFOD_MODEL_ASSET = "UltimateGoal.tflite";
     private static final String LABEL_FIRST_ELEMENT = "Quad";
     private static final String LABEL_SECOND_ELEMENT = "Single";
@@ -203,55 +201,16 @@ public class RedAutoMain extends LinearOpMode {
             // starting postion for linear actuators
             launcherAngle.setPosition(.43);
             launcherAngleR.setPosition(.43);
-            //hinge(true); testing
 
             //**GO TO BOX INSTRUCTIONS + DELIVER WOBBLE GOAL TO CORRECT BOX**
              goToBoxDeliverWobble(123,31,true, 0);
              sleep(1000);
-            launch(); //start launcher motors
-//            sleep(750); //make sure launchers are powered up enough
-//            goToPositionSlowDown(105, 56, .7, -5, 2); //high tower goal
-           sleep(500);
+             launch(); //start launcher motors
+            sleep(750); //make sure launchers are powered up enough
             powershot(); // first powershot
-//            collector.setPower(-1);
             powershot(); // second powershot
             powershot(); // third powershot
-//            collector.setPower(0);
-//            while(opModeIsActive() && i<3) {
-//
-//                if(i>0){
-//                    launcherL.setVelocity(425);
-//                    launcherR.setVelocity(-400);
-//                }
-//                if(i==1){
-//                    goToPositionSlowDown(105, 60, .7, -5, 2); //high tower goal
-//                    sleep(500);
-//                }
-//                i++;
-//                powershotTimer.reset();
-//                while (opModeIsActive() && (ringStopperSensor.getDistance(DistanceUnit.CM) > 4.7 && powershotTimer.time() < 2)) {//while ring is not under sensor, deliver to sensor (while loop ensures that the data is being updated and will stop when the ring is surely ready)
-//                    collectorWheel.setPower(-1);
-//                }
-//                powershotTimer.reset();
-//                collectorWheel.setPower(0);
-//                while (opModeIsActive() && (ringStopperSensor.getDistance(DistanceUnit.CM) < 4.7 && powershotTimer.time() < 2)) {//ring is under distance sensor but deliver it to launcher (while loop ensures that the ring is no longer in the system and is shot)
-//                    collectorWheel.setPower(-1);
-//                }
-//                collectorWheel.setPower(0);
-//                sleep(500);
-//            }
-//            collectorWheel.setPower(-1);39
-//            sleep(5000);
-//            collectorWheel.setPower(0); // stop collector wheel in case it is still running
-             /*^end of powershot shooting^*/
              launchSetZero(); // stop launchers
-             goToPositionSetZero(70, 57, .5, 0, 3);//go sideways to position far left from wobble goal
-             goToPositionSlowDown(70, 13, .5, 0, 8);//go backwards a little far away from wobble goal
-             goToPositionSetZero(82.5, 15, .4, 0, 1);//go right towards wobble goal to grip
-             grip(true);// grip wobble goal
-             sleep(750);// make sure wobble goal is gripped
-             goToBoxDeliverWobble(76.5, 61, false, 6);//go back to box to deliver second wobble goal (go to position, lift arm higher, ungrip)
-             sleep(750);// make sure wobble goal is delivered
             if(box=="c"){
                 goToPositionSetZero(109,80,.9,0,2);//parking behind white
             }
@@ -574,11 +533,5 @@ public class RedAutoMain extends LinearOpMode {
             }
         }
         collectorWheel.setPower(0);
-        /*possible fixes: use ring stopper servo in between loops
-        -hypothetically a distance sensor isn't necessary if you take the diameter of the ring and move the collector wheel that far with encoder to convey to the launcher as long as it consistently doesn't shoot more than one ring
-        -shooting from one position and changing the angle to get each position (requires quite a bit of testing)
-        -distance sensor if structure with move collector wheel encoder
-        -distance sensor while loops that stop collector wheel at certain condition instead of running the power for the conditions
-         */
     }
 }

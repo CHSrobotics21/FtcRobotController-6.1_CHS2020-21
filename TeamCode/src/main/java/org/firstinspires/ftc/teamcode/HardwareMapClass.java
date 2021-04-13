@@ -25,9 +25,9 @@ public class HardwareMapClass {
     final int CPRCollectorWheel = 288, CollectorWheelDiameter = 5;
     double CPICollectorWheel = CPRCollectorWheel/(CollectorWheelDiameter*3.1415);
     boolean isGoToPosition = false, islaunchRunning= false;
-    OdometryGlobalCoordinatePosition globalPositionUpdate;
-    Thread positionThread;
-    Orientation gyroAngles;
+    OdometryGlobalCoordinatePosition globalPositionUpdate = null;
+    Thread positionThread = null;
+    Orientation gyroAngles = null;
     public DcMotor frMotor=null, flMotor=null, brMotor=null, blMotor=null, collectorWheel=null, collector=null, verticalLeft=null, verticalRight=null, horizontal=null;
     public DcMotorEx launcherR=null, launcherL=null;
     public Servo launcherAngle=null, launcherAngleR=null, wobbleArmGripL=null, wobbleArmGripR=null, ringStopper=null;
