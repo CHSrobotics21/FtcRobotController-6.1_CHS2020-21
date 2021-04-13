@@ -38,6 +38,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.ReadWriteFile;
 
@@ -63,13 +64,13 @@ import java.util.List;
  * IMPORTANT: In order to use this OpMode, you need to obtain your own Vuforia license key as
  * is explained below.
  */
-@Autonomous(name = "Red WobblePark", group = "TFOdometry")
+@Autonomous(name = "Blue LaunchAndPark", group = "TFOdometry")
 //@Disabled
-public class RedAutoWobblePark extends LinearOpMode {
+public class BlueAutoLaunchPark extends LinearOpMode {
     private static final String TFOD_MODEL_ASSET = "UltimateGoal.tflite";
     private static final String LABEL_FIRST_ELEMENT = "Quad";
     private static final String LABEL_SECOND_ELEMENT = "Single";
-    private ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.SECONDS), powershotTimer = new ElapsedTime(ElapsedTime.Resolution.SECONDS);
+    private ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.SECONDS);
 
     /* Encoder Variables to use Counts per inch on Odometry and conveyance middle wheel */
     final double COUNTS_PER_REV = 8192; // CPR for REV Through Bore Encoders
@@ -89,15 +90,17 @@ public class RedAutoWobblePark extends LinearOpMode {
     DcMotor verticalLeft, verticalRight, horizontal;
     DcMotorEx launcherR, launcherL;
     DigitalChannel gripSwitch, armSwitch;
+    VoltageSensor volts;
     DistanceSensor distanceSensor, ringStopperSensor;
-    String ringFileContents = "";
-    int x = 101;
+    int x = 54;
     int i = 0;
     boolean ringIsSensed = false;
 
     File TeleOpStartingPos = AppUtil.getInstance().getSettingsFile("TeleOpStartingPos.txt");
-    File RingSensorData = AppUtil.getInstance().getSettingsFile("RingSensorData.txt");
     OdometryGlobalCoordinatePosition globalPositionUpdate;
+
+
+
 
 
 
@@ -146,43 +149,44 @@ public class RedAutoWobblePark extends LinearOpMode {
         /** Wait for the game to begin */
         telemetry.addData(">", "Press Play to start op mode");
         telemetry.update();
-       while(!isStarted()&& !isStopRequested()){
-           if (tfod != null) { // checks for object
-               // getUpdatedRecognitions() will return null if no new information is available since
-               // the last time that call was made.
-               List<Recognition> updatedRecognitions = tfod.getUpdatedRecognitions();
-               //List: collection of data <what type of list object is going to be (Tensor Flow objects)>
-               //updatedRecognitions: object of the name of list
-               //tfod reference object, .getUpdatedRecognitions: method to update recognitions, loads into list
-               if (updatedRecognitions != null) { // checks for existence of recognitions
-                   telemetry.addData("# Object Detected", updatedRecognitions.size()); //tells driver station how many objects(rings) it sees
-                   box = "a"; //To assume we don't see anything
-                   // step through the list of recognitions and display boundary info.
-                   int i = 0; //int type variable i is set to value zero as start of count
-                   for (Recognition recognition : updatedRecognitions) { //iteration loop ex. hot dogs in a cart. takes recognitions and assigns until end of list
-                       telemetry.addData(String.format("label (%d)", i), recognition.getLabel()); //label will be "single", "quad", or nothing
-                       telemetry.addData(String.format("  left,top (%d)", i), "%.03f , %.03f",
-                               recognition.getLeft(), recognition.getTop()); // highest part of object, and leftmost part of object location
-                       telemetry.addData(String.format("  right,bottom (%d)", i), "%.03f , %.03f",
-                               recognition.getRight(), recognition.getBottom());
-                       if (recognition.getRight()>200&& recognition.getRight()<1000 && recognition.getBottom()>200 && recognition.getBottom()<1000) {
-                           //check within bounds, to recognize only some rings. (right location)
-                           if (recognition.getLabel() == "Single") {
-                               box = "b";
+        while(!isStarted()&& !isStopRequested()){
+            if (tfod != null) { // checks for object
+                // getUpdatedRecognitions() will return null if no new information is available since
+                // the last time that call was made.
+                List<Recognition> updatedRecognitions = tfod.getUpdatedRecognitions();
+                //List: collection of data <what type of list object is going to be (Tensor Flow objects)>
+                //updatedRecognitions: object of the name of list
+                //tfod reference object, .getUpdatedRecognitions: method to update recognitions, loads into list
+                if (updatedRecognitions != null) { // checks for existence of recognitions
+                    telemetry.addData("# Object Detected", updatedRecognitions.size()); //tells driver station how many objects(rings) it sees
+                    box = "a"; //To assume we don't see anything
+                    // step through the list of recognitions and display boundary info.
+                    int i = 0; //int type variable i is set to value zero as start of count
+                    for (Recognition recognition : updatedRecognitions) { //iteration loop ex. hot dogs in a cart. takes recognitions and assigns until end of list
+                        telemetry.addData(String.format("label (%d)", i), recognition.getLabel()); //label will be "single", "quad", or nothing
+                        telemetry.addData(String.format("  left,top (%d)", i), "%.03f , %.03f",
+                                recognition.getLeft(), recognition.getTop()); // highest part of object, and leftmost part of object location
+                        telemetry.addData(String.format("  right,bottom (%d)", i), "%.03f , %.03f",
+                                recognition.getRight(), recognition.getBottom());
+                        if (recognition.getRight()>200&& recognition.getRight()<1000 && recognition.getBottom()>200 && recognition.getBottom()<1000) {
+                            //check within bounds, to recognize only some rings. (right location)
+                            if (recognition.getLabel() == "Single") {
+                                box = "b";
 
-                           } else if (recognition.getLabel() == "Quad") {
-                               box = "c";
-                           } else {
-                               box = "a"; 
-                           }
-                       }
+                            } else if (recognition.getLabel() == "Quad") {
+                                box = "c";
+                            } else {
+                                box = "a";
+                            }
+                            //launchPower=(volts.getVoltage());
+                        }
 
-                   }
-                   telemetry.addData("box: ",box);
-                   telemetry.update();
-               }
-           }
-       }
+                    }
+                    telemetry.addData("box: ",box);
+                    telemetry.update();
+                }
+            }
+        }
         timer.reset();
 
 
@@ -195,16 +199,40 @@ public class RedAutoWobblePark extends LinearOpMode {
             globalPositionUpdate.reverseLeftEncoder();
             //globalPositionUpdate.reverseNormalEncoder();
 
+            // starting postion for linear actuators
+            launcherAngle.setPosition(.43);
+            launcherAngleR.setPosition(.43);
+            //hinge(true); testing
 
             //**GO TO BOX INSTRUCTIONS + DELIVER WOBBLE GOAL TO CORRECT BOX**
-             goToBoxDeliverWobble(123,31,true, 0);
-             sleep(1000);
+            launch();
+            sleep(1000);
+            powershot();
+            collector.setPower(-1);
+            powershot();
+            powershot();
+            collector.setPower(0);
+            collectorWheel.setPower(0);
+            /*^end of powershot shooting^*/
 
-             goToPositionSetZero(80,80,.9,0,2);//parking behind white
+             /*go back to get 2nd wobble goal (where we think it's gonna be- tolerance could interrupt movements) while leaving the wobble goal arm out
+                so we can get a grip from the right side of the robot
+                incorporate sensor to detect if the robot has actually gotten grip on the wobble goal
+                 inch foreward to make sure of grip
+                  */
+
+            launchSetZero();
+
+            goToPositionSetZero(64,80,.9,0,2);//parking behind white//done
+
 
             String ContentsToWriteToFile = (globalPositionUpdate.returnXCoordinate()/COUNTS_PER_INCH) + " " + (globalPositionUpdate.returnYCoordinate()/COUNTS_PER_INCH) + " " + (globalPositionUpdate.returnOrientation());
+
             ReadWriteFile.writeFile(TeleOpStartingPos, ContentsToWriteToFile);
-            ReadWriteFile.writeFile(RingSensorData, ringFileContents);
+            telemetry.addData("StartingPostionX", globalPositionUpdate.returnXCoordinate());
+            telemetry.addData("StartingPostionY", globalPositionUpdate.returnYCoordinate());
+            telemetry.addData("StartingOrientation", globalPositionUpdate.returnOrientation());
+
 
         }
         if (tfod != null) { //stop button
@@ -237,11 +265,11 @@ public class RedAutoWobblePark extends LinearOpMode {
      */
     private void initTfod() {
         int tfodMonitorViewId = hardwareMap.appContext.getResources().getIdentifier(
-            "tfodMonitorViewId", "id", hardwareMap.appContext.getPackageName());
+                "tfodMonitorViewId", "id", hardwareMap.appContext.getPackageName());
         TFObjectDetector.Parameters tfodParameters = new TFObjectDetector.Parameters(tfodMonitorViewId); //take out during competition; leave parentheses blank
-       tfodParameters.minResultConfidence = 0.85f;
-       tfod = ClassFactory.getInstance().createTFObjectDetector(tfodParameters, vuforia);
-       tfod.loadModelFromAsset(TFOD_MODEL_ASSET, LABEL_FIRST_ELEMENT, LABEL_SECOND_ELEMENT);
+        tfodParameters.minResultConfidence = 0.85f;
+        tfod = ClassFactory.getInstance().createTFObjectDetector(tfodParameters, vuforia);
+        tfod.loadModelFromAsset(TFOD_MODEL_ASSET, LABEL_FIRST_ELEMENT, LABEL_SECOND_ELEMENT);
     }
 
 
@@ -351,8 +379,8 @@ public class RedAutoWobblePark extends LinearOpMode {
         verticalRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         horizontal.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
-        brMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER); //wobble arm encoder
-        brMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+//        brMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+//        blMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         frMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         brMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -364,7 +392,6 @@ public class RedAutoWobblePark extends LinearOpMode {
         //brMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 
         //brMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        ringStopper.setPosition(1);
         telemetry.addData("Status", "Hardware Map Init Complete");
         telemetry.update();
     }
@@ -415,46 +442,50 @@ public class RedAutoWobblePark extends LinearOpMode {
     {
         if (p)// bring down arm
         {
-            while(opModeIsActive()&&!(brMotor.getCurrentPosition()>-2900&&brMotor.getCurrentPosition()<-2700))// threshold for mid location on wobble arm comind down; wobble goal arm starts at 0 at beginning
-            {
-                wobbleArmHingeL.setPower(-1);
-                wobbleArmHingeR.setPower(1);
-                telemetry.addData("Wobble counts", brMotor.getCurrentPosition());
-                telemetry.update();
-            }
-            wobbleArmHingeL.setPower(0) ;
-            wobbleArmHingeR.setPower(0);
-        }
-        else {//bring arm back up
-            while(opModeIsActive()&&!(brMotor.getCurrentPosition()<-500&&brMotor.getCurrentPosition()>-900)) /*find threshold for when wobble goal arm is not up*/ {
-                wobbleArmHingeL.setPower(1);
-                wobbleArmHingeR.setPower(-1);
-            }
+            wobbleArmHingeL.setPower(-1);
+            wobbleArmHingeR.setPower(1);
+            sleep(1500);
             wobbleArmHingeL.setPower(0);
             wobbleArmHingeR.setPower(0);
         }
-    }
-    public void hinge(int threshold){
-        while(opModeIsActive()&&!(brMotor.getCurrentPosition()>threshold&&brMotor.getCurrentPosition()<threshold+200)) //hinge arm at desired threshold
-        {
-            wobbleArmHingeL.setPower(1);
-            wobbleArmHingeR.setPower(-1);
-            telemetry.addData("Wobble counts", brMotor.getCurrentPosition());
-            telemetry.update();
+        else {//bring arm back up
+            wobbleArmHingeL.setPower(1); // open arm
+            wobbleArmHingeR.setPower(-1); // open arm
+            sleep(1500); // continue for a second
+            wobbleArmHingeL.setPower(0); // stop servo
+            wobbleArmHingeR.setPower(0); // open arm
         }
-        wobbleArmHingeL.setPower(0) ;
-        wobbleArmHingeR.setPower(0);
     }
+//    public void hinge(boolean p)
+//    {
+//        if (p)// bring down arm
+//        {
+//            while(opModeIsActive()&&!(brMotor.getCurrentPosition()>-2900&&brMotor.getCurrentPosition()<-2500)) /*find threshold for when wobble goal arm is not down; don't want arm to be all the way down*/ {
+//                wobbleArmHingeL.setPower(-1);
+//                wobbleArmHingeR.setPower(1);
+//            }
+//            wobbleArmHingeL.setPower(0) ;
+//            wobbleArmHingeR.setPower(0);
+//        }
+//        else {//bring arm back up
+//            while(opModeIsActive()&&!(brMotor.getCurrentPosition()<-500&&brMotor.getCurrentPosition()>-900)) /*find threshold for when wobble goal arm is not up*/ {
+//                wobbleArmHingeL.setPower(1);
+//                wobbleArmHingeR.setPower(-1);
+//            }
+//            wobbleArmHingeL.setPower(0);
+//            wobbleArmHingeR.setPower(0);
+//        }
+//    }
 
     public void moveCollectorWheel(int inches)
-    { // move collector wheel using encoder
+    { //place after go to position statements to shoot at power shot
         collectorWheel.setTargetPosition(collectorWheel.getCurrentPosition()- (int)(inches*CPICollectorWheel)); // enter encoder counts or inches you want to move times counts per inch FOR THIS WHEEL AND MOTORS
         collectorWheel.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         collectorWheel.setPower(1);
     }
     public void launch(){
-        launcherL.setVelocity(500);
-        launcherR.setVelocity(-475);
+        launcherL.setVelocity(750);
+        launcherR.setVelocity(-750);
     }
     public void launchSetZero(){
         launcherL.setVelocity(0);
@@ -462,62 +493,51 @@ public class RedAutoWobblePark extends LinearOpMode {
     }
     public void goToBoxDeliverWobble(double goAroundRingsCoorX, double goAroundRingsCoorY, boolean doHingeArm, int comeback) {
         if (box == "a") {
-            goToPositionSlowDown(115-comeback, 79+comeback, .85, 0, 8);// box a
+            goToPositionSlowDown(30-comeback, 79-comeback, .85, 0, 8);// box a//done
         }
         else if (box == "b" || box == "c") {
-                goToPositionSetZero(goAroundRingsCoorX, goAroundRingsCoorY, .85, 0, 8); // First movement out of starting postition to strafe to the first box
-                if (box == "b") {
-                    goToPositionSlowDown(94-comeback, 103+comeback, .7, 0, 8);// box b
-                } else {//box c
-                    goToPositionSlowDown(115-comeback, 127-comeback, .7, 0, 8);
-                }
+            goToPositionSetZero(goAroundRingsCoorX, goAroundRingsCoorY, .85, 0, 8); // First movement out of starting postition to strafe to the first box
+            if (box == "b") {
+                goToPositionSlowDown(43-comeback, 103-comeback, .7, 0, 8);// box b//done
+            } else {//box c
+                goToPositionSlowDown(30-comeback, 124-comeback, .7, 0, 8);//done
             }
-            if (doHingeArm) {
-                hinge(true);
-            } //hinge arm out to deliver
-            else{
-                if(box=="c") {
-                    hinge(-2900); //second wobble goal bring arm a bit up
-                }
-            }
-            grip(false); //ungrip wobble goal to release and deliver
-
         }
+        if (doHingeArm) {
+            hinge(true);
+        } //hinge arm out to deliver
+        grip(false); //ungrip wobble goal to release and deliver
+
+    }
     public void goToPositionSlowDown(double targetXPosition, double targetYPosition, double robotPower, double desiredRobotOrientation, double allowableDistanceError ){
         goToPositionSetZero(targetXPosition,targetYPosition,robotPower,desiredRobotOrientation,8);
         goToPositionSetZero(targetXPosition,targetYPosition,robotPower-.3,desiredRobotOrientation,1.2);
     }
     public void powershot(){
         telemetry.addData("ring sensor: ", ringStopperSensor.getDistance(DistanceUnit.CM));
-         x -= 4; // change x position to make it to different powershots
-        goToPositionSetZero(x, 66.5, .35, -10, 1.5);// move to behind white Line and position in front of powershot for each one at an angle
-        powershotTimer.reset();
-        if(x==97) {// first powershot x coordinate
-            while (opModeIsActive() && (ringStopperSensor.getDistance(DistanceUnit.CM) < 4.7&&powershotTimer.time()<2)) {//ring is under distance sensor but deliver it to launcher
-                collectorWheel.setPower(-.9);
-                ringFileContents += "first powershot data: "+ ringStopperSensor.getDistance(DistanceUnit.CM)+" cm"+ " \n";
+        x += 7;
+        goToPositionSetZero(x, 77.5, .35, 0, 1.5);// move to behind white Line and position in front of powershot for powershot 1//done
+        if(x==61) {
+            while (opModeIsActive() && ringStopperSensor.getDistance(DistanceUnit.CM) < 4.6) {
+                collectorWheel.setPower(-.7);
             }
         }
-        // timers to make sure that the loop will not get caught if two rings are shot in the same loop
         else{
-            while(opModeIsActive() && (ringStopperSensor.getDistance(DistanceUnit.CM)>4.7&&powershotTimer.time()<2)){//while ring is not under sensor, deliver to sensor (while loop ensures that the data is being updated and will stop when the ring is surely ready)
-                collectorWheel.setPower(-.9);
-                ringFileContents += "ring distance data not under sensor: "+ ringStopperSensor.getDistance(DistanceUnit.CM)+" cm"+ " \n";
+            while(opModeIsActive()&&ringStopperSensor.getDistance(DistanceUnit.CM)>4.6){
+                collectorWheel.setPower(-.7);
 
             }
-            powershotTimer.reset();
             collectorWheel.setPower(0);
-            while (opModeIsActive() && (ringStopperSensor.getDistance(DistanceUnit.CM) < 4.7&&powershotTimer.time()<2)) {//ring is under distance sensor but deliver it to launcher (while loop ensures that the ring is no longer in the system and is shot)
-                collectorWheel.setPower(-.9);
-                ringFileContents+="ring sensor data under sensor : "+ ringStopperSensor.getDistance(DistanceUnit.CM)+" cm"+ " \n";
+            while (opModeIsActive() && ringStopperSensor.getDistance(DistanceUnit.CM) < 4.6) {
+                collectorWheel.setPower(-.7);
             }
         }
         collectorWheel.setPower(0);
-        /*possible fixes: use ring stopper servo in between loops
-        -hypothetically a distance sensor isn't necessary if you take the diameter of the ring and move the collector wheel that far with encoder to convey to the launcher as long as it consistently doesn't shoot more than one ring
-        -shooting from one position and changing the angle to get each position (requires quite a bit of testing)
-        -distance sensor if structure with move collector wheel encoder
-        -distance sensor while loops that stop collector wheel at certain condition instead of running the power for the conditions
-         */
+//        if(x > 89){
+//            sleep(250);
+//        }
+
     }
+
 }
+

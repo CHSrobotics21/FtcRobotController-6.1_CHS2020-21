@@ -63,9 +63,9 @@ import java.util.List;
  * IMPORTANT: In order to use this OpMode, you need to obtain your own Vuforia license key as
  * is explained below.
  */
-@Autonomous(name = "Red WobblePark", group = "TFOdometry")
+@Autonomous(name = "Red LaunchOneWobble", group = "TFOdometry")
 //@Disabled
-public class RedAutoWobblePark extends LinearOpMode {
+public class RedAutoLaunchOneWobble extends LinearOpMode {
     private static final String TFOD_MODEL_ASSET = "UltimateGoal.tflite";
     private static final String LABEL_FIRST_ELEMENT = "Quad";
     private static final String LABEL_SECOND_ELEMENT = "Single";
@@ -98,6 +98,9 @@ public class RedAutoWobblePark extends LinearOpMode {
     File TeleOpStartingPos = AppUtil.getInstance().getSettingsFile("TeleOpStartingPos.txt");
     File RingSensorData = AppUtil.getInstance().getSettingsFile("RingSensorData.txt");
     OdometryGlobalCoordinatePosition globalPositionUpdate;
+
+
+
 
 
 
@@ -195,16 +198,56 @@ public class RedAutoWobblePark extends LinearOpMode {
             globalPositionUpdate.reverseLeftEncoder();
             //globalPositionUpdate.reverseNormalEncoder();
 
+            // starting postion for linear actuators
+            launcherAngle.setPosition(.43);
+            launcherAngleR.setPosition(.43);
+            //hinge(true); testing
 
             //**GO TO BOX INSTRUCTIONS + DELIVER WOBBLE GOAL TO CORRECT BOX**
              goToBoxDeliverWobble(123,31,true, 0);
              sleep(1000);
+            launch(); //start launcher motors
+            sleep(750); //make sure launchers are powered up enough
+            goToPositionSlowDown(105, 60, .7, -5, 2); //high tower goal
+            sleep(500);
+//            powershot(); // first powershot
+//            collector.setPower(-1);
+//            powershot(); // second powershot
+//            powershot(); // third powershot
+//            collector.setPower(0);
+            collectorWheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            while(opModeIsActive() && i<3) {
+
+                if(i>0){
+                    launcherL.setVelocity(425);
+                    launcherR.setVelocity(-400);
+                }
+                i++;
+                powershotTimer.reset();
+                while (opModeIsActive() && (ringStopperSensor.getDistance(DistanceUnit.CM) > 4.7 && powershotTimer.time() < 2)) {//while ring is not under sensor, deliver to sensor (while loop ensures that the data is being updated and will stop when the ring is surely ready)
+                    collectorWheel.setPower(-1);
+                }
+                powershotTimer.reset();
+                collectorWheel.setPower(0);
+                while (opModeIsActive() && (ringStopperSensor.getDistance(DistanceUnit.CM) < 4.7 && powershotTimer.time() < 2)) {//ring is under distance sensor but deliver it to launcher (while loop ensures that the ring is no longer in the system and is shot)
+                    collectorWheel.setPower(-1);
+                }
+                collectorWheel.setPower(0);
+                sleep(500);
+            }
+//            collectorWheel.setPower(-1);39
+//            sleep(5000);
+//            collectorWheel.setPower(0); // stop collector wheel in case it is still running
+             /*^end of powershot shooting^*/
+             launchSetZero(); // stop launchers
 
              goToPositionSetZero(80,80,.9,0,2);//parking behind white
 
             String ContentsToWriteToFile = (globalPositionUpdate.returnXCoordinate()/COUNTS_PER_INCH) + " " + (globalPositionUpdate.returnYCoordinate()/COUNTS_PER_INCH) + " " + (globalPositionUpdate.returnOrientation());
             ReadWriteFile.writeFile(TeleOpStartingPos, ContentsToWriteToFile);
             ReadWriteFile.writeFile(RingSensorData, ringFileContents);
+
+
 
         }
         if (tfod != null) { //stop button
