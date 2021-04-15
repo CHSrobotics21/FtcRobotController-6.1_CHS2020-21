@@ -51,19 +51,7 @@ import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
 
 import java.io.File;
 import java.util.List;
-
-
-/**
- * This 2020-2021 OpMode illustrates the basics of using the TensorFlow Object Detection API to
- * determine the position of the Ultimate Goal game elements.
- *
- * Use Android Studio to Copy this Class, and Paste it into your team's code folder with a new name.
- * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list.
- *
- * IMPORTANT: In order to use this OpMode, you need to obtain your own Vuforia license key as
- * is explained below.
- */
-@Autonomous(name = "Red Parking", group = "TFOdometry")
+@Autonomous(name = "Red ParkingHwMap", group = "TFOdometry")
 //@Disabled
 public class RedAutoParkingHwMap extends HardwareMapClassLinearExtend {
     File TeleOpStartingPos = AppUtil.getInstance().getSettingsFile("TeleOpStartingPos.txt");
@@ -82,7 +70,7 @@ public class RedAutoParkingHwMap extends HardwareMapClassLinearExtend {
             globalPositionUpdate.reverseLeftEncoder();
             //globalPositionUpdate.reverseNormalEncoder();
 
-             goToPositionSetZero(80,80,.9,0,2);//parking behind white
+            goToPositionSetZero(80,80,.9,0,2);//parking behind white
 
             String ContentsToWriteToFile = (globalPositionUpdate.returnXCoordinate()/COUNTS_PER_INCH) + " " + (globalPositionUpdate.returnYCoordinate()/COUNTS_PER_INCH) + " " + (globalPositionUpdate.returnOrientation());
             ReadWriteFile.writeFile(TeleOpStartingPos, ContentsToWriteToFile);

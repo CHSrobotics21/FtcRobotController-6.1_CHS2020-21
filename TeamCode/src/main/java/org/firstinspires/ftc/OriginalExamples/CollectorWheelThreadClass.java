@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.other;
+package org.firstinspires.ftc.OriginalExamples;
 
 import com.qualcomm.robotcore.hardware.DcMotor;
 

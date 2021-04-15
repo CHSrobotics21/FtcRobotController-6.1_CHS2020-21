@@ -686,6 +686,8 @@ public class TeleOpMain extends OpMode {
         telemetry.addData("previous: ", topPrevious);
         telemetry.addData("current", topCurrent);
         telemetry.addData("Distance ring stopper: ", ringStopperSensor.getDistance(DistanceUnit.CM));
+        telemetry.addData("Launcher angle: ", launcherAngleR.getPosition());
+        telemetry.addData("Launcher angle: ", launcherAngle.getPosition());
     }
 
 
