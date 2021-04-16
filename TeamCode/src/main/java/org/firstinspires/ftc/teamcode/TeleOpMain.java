@@ -212,7 +212,7 @@ public class TeleOpMain extends OpMode {
     @Override
     public void start() {
         runtime.reset();
-        globalPositionUpdate = new OdometryGlobalCoordinatePosition(verticalLeft, verticalRight, horizontal, COUNTS_PER_INCH, 75, startX, startY, startOrientation);
+        globalPositionUpdate = new OdometryGlobalCoordinatePosition(verticalLeft, verticalRight, horizontal, COUNTS_PER_INCH, 75, 0,0,0);//startX, startY, startOrientation);
         positionThread = new Thread(globalPositionUpdate);
 
         positionThread.start();
@@ -328,17 +328,17 @@ public class TeleOpMain extends OpMode {
 //            collectorWheel.setPower(-.9);
 //        }
 
-        if (gamepad2.dpad_up){
-            launcherAngleR.setPosition(.45);
-            launcherAngle.setPosition(.45);
-        }
         if (gamepad2.dpad_down){
+            launcherAngleR.setPosition(.33);
+            launcherAngle.setPosition(.33);
+        }
+        if (gamepad2.dpad_left){
             launcherAngleR.setPosition(.3);
             launcherAngle.setPosition(.3);
         }
-        if (gamepad2.dpad_left){
-            launcherAngleR.setPosition(.4);
-            launcherAngle.setPosition(.4);
+        if (gamepad2.dpad_up){
+            launcherAngleR.setPosition(.36);
+            launcherAngle.setPosition(.36);
         }
         if(gamepad2.dpad_right){
             if(ringStopperCanToggle) //make sure that the code doesn't just toggle the thing every iteration as long as the trigger's held
@@ -676,18 +676,19 @@ public class TeleOpMain extends OpMode {
 //            isWheelRunning = false;
 //        }
 
-        telemetry.addData("rings: ",rings);
+//        telemetry.addData("rings: ",rings);
         telemetry.addData("Status", "Run Time: " + runtime.toString());
-        telemetry.addData("Wobble counts", brMotor.getCurrentPosition());
+//        telemetry.addData("Wobble counts", brMotor.getCurrentPosition());
         telemetry.addData("StartingPostionX", globalPositionUpdate.returnXCoordinate()/COUNTS_PER_INCH);
         telemetry.addData("StartingPostionY", globalPositionUpdate.returnYCoordinate()/COUNTS_PER_INCH);
-        telemetry.addData("intake distance Sensor: ", String.format("%.01f cm",intakeDistanceSensor.getDistance(DistanceUnit.CM)));
-        telemetry.addData("sensor timer: ", timer.time());
-        telemetry.addData("previous: ", topPrevious);
-        telemetry.addData("current", topCurrent);
-        telemetry.addData("Distance ring stopper: ", ringStopperSensor.getDistance(DistanceUnit.CM));
+//        telemetry.addData("intake distance Sensor: ", String.format("%.01f cm",intakeDistanceSensor.getDistance(DistanceUnit.CM)));
+//        telemetry.addData("sensor timer: ", timer.time());
+//        telemetry.addData("previous: ", topPrevious);
+//        telemetry.addData("current", topCurrent);
+//        telemetry.addData("Distance ring stopper: ", ringStopperSensor.getDistance(DistanceUnit.CM));
         telemetry.addData("Launcher angle: ", launcherAngleR.getPosition());
         telemetry.addData("Launcher angle: ", launcherAngle.getPosition());
+        telemetry.addData("Robot angle: ", getIntegratedHeading());
     }
 
 
@@ -824,8 +825,8 @@ public class TeleOpMain extends OpMode {
         }
     }
     public void launch(){
-        launcherL.setVelocity(725);
-        launcherR.setVelocity(-775);
+        launcherL.setVelocity(575);
+        launcherR.setVelocity(-375);
         islaunchRunning = true;
     }
     public void launchSetZero(){

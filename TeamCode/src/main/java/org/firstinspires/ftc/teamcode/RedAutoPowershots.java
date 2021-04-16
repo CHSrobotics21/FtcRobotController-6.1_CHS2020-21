@@ -63,9 +63,9 @@ import java.util.List;
  * IMPORTANT: In order to use this OpMode, you need to obtain your own Vuforia license key as
  * is explained below.
  */
-@Autonomous(name = "Red HighGoal", group = "TFOdometry")
+@Autonomous(name = "Red Powershots", group = "TFOdometry")
 //@Disabled
-public class RedAutoGoals extends LinearOpMode {
+public class RedAutoPowershots extends LinearOpMode {
     private static final String TFOD_MODEL_ASSET = "UltimateGoal.tflite";
     private static final String LABEL_FIRST_ELEMENT = "Quad";
     private static final String LABEL_SECOND_ELEMENT = "Single";
@@ -197,29 +197,18 @@ public class RedAutoGoals extends LinearOpMode {
             globalPositionUpdate.reverseRightEncoder();
             globalPositionUpdate.reverseLeftEncoder();
             //globalPositionUpdate.reverseNormalEncoder();
+
             //launcher position
-            launcherAngle.setPosition(.43);
-            launcherAngleR.setPosition(.43);
+            launcherAngle.setPosition(.33);
+            launcherAngleR.setPosition(.33);
 
-            //position to shoot high goal
-            goToPosition(0,0,0,0,0);
+            //position to shoot powershots non-angled
+            goToPositionSetZero(111,70,0,0,0);
+            launch();
+            powershot(16);
+            powershot(20.5);
+            powershot(25);
 
-            collectorWheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-            while(opModeIsActive() && i<3) {
-
-                i++;
-                powershotTimer.reset();
-                while (opModeIsActive() && (ringStopperSensor.getDistance(DistanceUnit.CM) > 4.7 && powershotTimer.time() < 2)) {//while ring is not under sensor, deliver to sensor (while loop ensures that the data is being updated and will stop when the ring is surely ready)
-                    collectorWheel.setPower(-1);
-                }
-                powershotTimer.reset();
-                collectorWheel.setPower(0);
-                while (opModeIsActive() && (ringStopperSensor.getDistance(DistanceUnit.CM) < 4.7 && powershotTimer.time() < 2)) {//ring is under distance sensor but deliver it to launcher (while loop ensures that the ring is no longer in the system and is shot)
-                    collectorWheel.setPower(-1);
-                }
-                collectorWheel.setPower(0);
-                sleep(500);
-            }
 //            collectorWheel.setPower(-1);39
 //            sleep(5000);
 //            collectorWheel.setPower(0); // stop collector wheel in case it is still running
@@ -480,8 +469,8 @@ public class RedAutoGoals extends LinearOpMode {
         collectorWheel.setPower(1);
     }
     public void launch(){
-        launcherL.setVelocity(500);
-        launcherR.setVelocity(-475);
+        launcherL.setVelocity(575);
+        launcherR.setVelocity(-375);
     }
     public void launchSetZero(){
         launcherL.setVelocity(0);
@@ -546,5 +535,15 @@ public class RedAutoGoals extends LinearOpMode {
         -distance sensor if structure with move collector wheel encoder
         -distance sensor while loops that stop collector wheel at certain condition instead of running the power for the conditions
          */
+    }
+    public void powershot(double robotAngle){
+        goToPositionSetZero(111,70,.5,robotAngle, 1 );
+        powershotTimer.reset();
+        collectorWheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        while (opModeIsActive() && (ringStopperSensor.getDistance(DistanceUnit.CM) > 4.7 && powershotTimer.time() < 2)) {//while ring is not under sensor, deliver to sensor (while loop ensures that the data is being updated and will stop when the ring is surely ready)
+            collectorWheel.setPower(-1);//move wheel for sensor
+        }
+        collectorWheel.setPower(0);
+
     }
 }

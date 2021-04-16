@@ -18,8 +18,8 @@ import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
 
 import java.io.File;
 
-@TeleOp(name = "teleOp")
-@Disabled
+@TeleOp(name = "teleOphwMap")
+//@Disabled
 public class TeleOpSimplified extends OpMode {
     /*
     Simplified tele op class that calls hardwareMapClass that has goToPosition, other methods, and a new hardware map class
@@ -38,7 +38,7 @@ public class TeleOpSimplified extends OpMode {
     @Override
     public void init() {
 
-        robo.init(hardwareMap);
+        robo.initHwMap(hardwareMap);
         File TeleOpStartingPos = AppUtil.getInstance().getSettingsFile("TeleOpStartingPos.txt");
         String fileContents = ReadWriteFile.readFile(TeleOpStartingPos).trim();
         String[] array = fileContents.split(" ");
@@ -361,6 +361,7 @@ public class TeleOpSimplified extends OpMode {
         robo.verticalRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         robo.horizontal.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         robo.globalPositionUpdate = new OdometryGlobalCoordinatePosition(robo.verticalLeft, robo.verticalRight, robo.horizontal, robo.COUNTS_PER_INCH, 75, cornerX, cornerY, 0);
-
+        robo.positionThread = new Thread(robo.globalPositionUpdate);
+        robo.positionThread.start();
     }
 }
