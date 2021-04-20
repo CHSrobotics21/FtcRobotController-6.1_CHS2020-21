@@ -19,7 +19,7 @@ import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
 import java.io.File;
 
 @TeleOp(name = "teleOphwMap")
-//@Disabled
+@Disabled
 public class TeleOpSimplified extends OpMode {
     /*
     Simplified tele op class that calls hardwareMapClass that has goToPosition, other methods, and a new hardware map class

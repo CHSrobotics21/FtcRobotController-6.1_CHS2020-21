@@ -226,62 +226,7 @@ public class TeleOpMain extends OpMode {
     public void loop() {
 
         gyroAngles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
-//        if(imu.getAngularOrientation().firstAngle>0&&imu.getAngularOrientation().firstAngle<90){
-//            y = Range.clip(gamepad1.left_stick_x, -1, 1);
-//            x = Range.clip(gamepad1.left_stick_y, -1, 1);
-//        }
-//        else if(imu.getAngularOrientation().firstAngle>90&&imu.getAngularOrientation().firstAngle<180){
-//            x = Range.clip(-gamepad1.left_stick_x, -1, 1);
-//            y = Range.clip(gamepad1.left_stick_y, -1, 1);
-//        }
-//        else if(imu.getAngularOrientation().firstAngle<0&&imu.getAngularOrientation().firstAngle>-90){
-//            y = Range.clip(gamepad1.left_stick_x, -1, 1);
-//            x = Range.clip(gamepad1.left_stick_y, -1, 1);
-//        }
-//        else if(imu.getAngularOrientation().firstAngle<-90&&imu.getAngularOrientation().firstAngle>-180){
-//            x = Range.clip(gamepad1.left_stick_x, -1, 1);
-//            y = Range.clip(-gamepad1.left_stick_y, -1, 1);
-//        }
-//        if ((int)imu.getAngularOrientation().firstAngle!=0&&(int)imu.getAngularOrientation().firstAngle%90==0){
-//            if(y==Range.clip(gamepad1.left_stick_x, -1, 1)&&x==Range.clip(gamepad1.left_stick_y, -1, 1)){
-//                y = Range.clip(gamepad1.left_stick_y, -1, 1);
-//                x = Range.clip(gamepad1.left_stick_x, -1, 1);
-//            }
-//            else{
-//                y = Range.clip(gamepad1.left_stick_x, -1, 1);
-//                x = Range.clip(gamepad1.left_stick_y, -1, 1);
-//            }
-//            joystickAngle = Math.atan2(-x, y);
-//            joystickAngle360 = joystickAngle >= 0 ? joystickAngle : (2 * Math.PI) + joystickAngle;
-//        }
 
-
-
-//        if(gamepad1.y) {
-//            launch();
-//            islaunchRunning = true;
-//            if (!buttonPressed) {
-//                timer.reset();
-//                buttonPressed = true;
-//            } else if (timer.time() > .2&&!isWheelRunning) {
-//                collectorWheel.setPower(-.9);
-//            }
-//        }
-//        else{
-//            islaunchRunning=false;
-//            buttonPressed=false;
-//            launchSetZero();
-//            AIlaunch = true;//collectorWheel.setPower(0);
-//        }
-//        if(gamepad2.left_bumper&&!isWheelRunning) {
-//            isWheelRunning = true;
-////            collectorWheel.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-////            collectorWheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-////            collectorWheel.setPower(-.9);
-//            moveCollectorWheel();
-//
-//
-//        }
         if(gamepad2.left_bumper){
             collectorWheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
             collectorWheel.setPower(-1);
@@ -528,10 +473,6 @@ public class TeleOpMain extends OpMode {
             lockDrive = false;
         }
 
-        //y = Range.clip(gamepad1.left_stick_x, -1, 1);
-        //x = Range.clip(gamepad1.left_stick_y, -1, 1);
-        //joystickAngle = Math.atan2(-x, y);
-        //joystickAngle360 = joystickAngle >= 0 ? joystickAngle : (2 * Math.PI) + joystickAngle;
         if (gamepad1.right_trigger > .05 || gamepad1.left_trigger > .05) {
             driveRotation = gamepad1.left_trigger - gamepad1.right_trigger;
             desiredRobotHeading = getIntegratedHeading();
@@ -561,8 +502,6 @@ public class TeleOpMain extends OpMode {
         {
             perspectiveCanToggle=true;
         }
-//        if (gamepad1.dpad_up) {robotPerspective = true;}
-//        if (gamepad1.dpad_down) {robotPerspective = false;}
         if (robotPerspective) { //Controls are mapped to the robot perspective
             fieldReference = 0;
             //Positive values for x axis are joystick right
@@ -582,12 +521,6 @@ public class TeleOpMain extends OpMode {
         joystickAngle360 = joystickAngle >= 0 ? joystickAngle : (2*Math.PI) + joystickAngle;
         driveSpeed = Range.clip(Math.sqrt(y * y + x * x), -1, 1);
 
-
-//        flPower = Math.cos(joystickAngle360 - Math.toRadians(desiredRobotHeading) + Math.PI / 4);
-//        frPower = Math.sin(joystickAngle360 - Math.toRadians(desiredRobotHeading) + Math.PI / 4);
-//        blPower = Math.sin(joystickAngle360 - Math.toRadians(desiredRobotHeading) + Math.PI / 4);
-//        brPower = Math.cos(joystickAngle360 - Math.toRadians(desiredRobotHeading) + Math.PI / 4);
-//        maxMotorPower = Math.max(Math.max(Math.max(Math.abs(flPower), Math.abs(frPower)), Math.abs(blPower)), Math.abs(brPower));
         flPower = Math.cos(joystickAngle360 - Math.toRadians(fieldReference) + Math.PI / 4);
         frPower = Math.sin(joystickAngle360 - Math.toRadians(fieldReference) + Math.PI / 4);
         blPower = Math.sin(joystickAngle360 - Math.toRadians(fieldReference) + Math.PI / 4);
@@ -624,19 +557,21 @@ public class TeleOpMain extends OpMode {
         if(!lockDrive)
         {
 
+            if(gamepad1.dpad_up){
+                goToPositionSlowDown(111, 70, .7, 0); // go to shooting position
+            }
             if(gamepad1.x){
-                goToPositionSlowDown(89, 67, .7, 0, 2);
-                 //power-shot 1
+                goToAngle(111,70,.7,-16, 1 );//angle robot using IMU
+                //powershot 1
             }
             else if(gamepad1.a){
-                goToPositionSlowDown(82, 67, .7, 0, 2); //powershot 2
+                goToAngle(111,70,.7,-20.5, 1 );
             }
             else if(gamepad1.b){
-                goToPositionSlowDown(75, 67, .7, 0, 2); //powershot 3
+                goToAngle(111,70,.7,-25, 1 ); //powershot 3
             }
             else if(gamepad1.y){
-                goToPositionSlowDown(105, 39, .7, 0, 2);
-                 // launching
+                goToPositionSlowDown(111,60,.6,0);// launching high tower
             }
             else if(gamepad1.left_bumper){
                 flMotor.setPower(flPower*.5);
@@ -689,6 +624,8 @@ public class TeleOpMain extends OpMode {
         telemetry.addData("Launcher angle: ", launcherAngleR.getPosition());
         telemetry.addData("Launcher angle: ", launcherAngle.getPosition());
         telemetry.addData("Robot angle: ", getIntegratedHeading());
+        telemetry.addData("launcherL velocity: ", launcherL.getVelocity());
+        telemetry.addData("launcherR velocity: ", launcherR.getVelocity());
     }
 
 
@@ -759,12 +696,76 @@ public class TeleOpMain extends OpMode {
 
         }
     }
-    public void goToPositionSlowDown(double targetXPosition, double targetYPosition, double robotPower, double desiredRobotOrientation, double allowableDistanceError ){
+    public void goToPositionSlowDown(double targetXPosition, double targetYPosition, double robotPower, double desiredRobotOrientation){
         if (
         goToPosition(targetXPosition,targetYPosition,robotPower,desiredRobotOrientation,8)) {}
         if (
         goToPosition(targetXPosition,targetYPosition,robotPower-.3,desiredRobotOrientation,1)) {}
         
+    }
+    public boolean goToAngle(double targetXPosition, double targetYPosition, double robotPower, double desiredRobotOrientation, double allowableAngleError ) {
+        targetXPosition *= COUNTS_PER_INCH;
+        isGoToPosition = true;
+        targetYPosition *= COUNTS_PER_INCH;
+        double blPower = 0; // motor speed
+        double brPower = 0; // motor speed
+        double flPower = 0; // motor speed
+        double frPower = 0; // motor speed
+        double pivotCorrectionAdj = .05; // constant to scale down pivot correction angle to work with setting powers for mecanum drive motors
+        double distanceToXTarget = targetXPosition - globalPositionUpdate.returnXCoordinate();
+        double distanceToYTarget = targetYPosition - globalPositionUpdate.returnYCoordinate();
+        double distance = Math.hypot(distanceToXTarget, distanceToYTarget);
+        if (desiredRobotOrientation<getIntegratedHeading()-allowableAngleError) { //correct heading too
+            distance = Math.hypot(distanceToXTarget, distanceToYTarget);
+            distanceToXTarget = targetXPosition - globalPositionUpdate.returnXCoordinate();
+            distanceToYTarget = targetYPosition - globalPositionUpdate.returnYCoordinate();
+            double robotMovementAngle = Math.toDegrees(Math.atan2(distanceToXTarget, distanceToYTarget));
+            double robotMovmentXComponent = calculateX(robotMovementAngle - globalPositionUpdate.returnOrientation(), robotPower);
+            double robotMovmentYComponent = calculateY(robotMovementAngle - globalPositionUpdate.returnOrientation(), robotPower);
+            double pivotCorrection = (desiredRobotOrientation - globalPositionUpdate.returnOrientation()) * pivotCorrectionAdj;
+            //double[] powers = {robotMovmentYComponent, robotMovmentYComponent, robotMovmentYComponent, robotMovmentYComponent};//array for powers
+            blPower = robotMovmentYComponent - robotMovmentXComponent + pivotCorrection;
+            flPower = robotMovmentYComponent + robotMovmentXComponent + pivotCorrection;
+            brPower = robotMovmentYComponent + robotMovmentXComponent - pivotCorrection;
+            frPower = robotMovmentYComponent - robotMovmentXComponent - pivotCorrection;
+            //set powers to motors to move
+            double maxMotorPower = Math.max(Math.max(Math.max(Math.abs(flPower), Math.abs(frPower)), Math.abs(blPower)), Math.abs(brPower));
+
+            if (Math.abs(maxMotorPower) > 1) {
+                flPower = (flPower / maxMotorPower) * robotPower;
+                frPower = (frPower / maxMotorPower) * robotPower;
+                blPower = (blPower / maxMotorPower) * robotPower;
+                brPower = (brPower / maxMotorPower) * robotPower;
+            } else if (Math.abs(maxMotorPower) < .03) {
+                flPower = 0;
+                frPower = 0;
+                blPower = 0;
+                brPower = 0;
+            }
+            flMotor.setPower(flPower);
+            frMotor.setPower(frPower);
+            blMotor.setPower(blPower);
+            brMotor.setPower(brPower);
+            telemetry.addData("X Position", globalPositionUpdate.returnXCoordinate() / COUNTS_PER_INCH);
+            telemetry.addData("Y Position", globalPositionUpdate.returnYCoordinate() / COUNTS_PER_INCH);
+            telemetry.addData("Orientation (Degrees)", globalPositionUpdate.returnOrientation());
+            telemetry.addData("XComponent: ", robotMovmentXComponent / .9);
+            telemetry.addData("YComponent: ", robotMovmentYComponent / .9);
+            telemetry.addData("Pivot Correction: ", pivotCorrection);
+            telemetry.addData("Gyro orientation: ", imu.getAngularOrientation().firstAngle);
+            telemetry.update();
+            isGoToPosition = true;
+            return false;
+        }
+        else{
+            flMotor.setPower(0);
+            frMotor.setPower(0);
+            blMotor.setPower(0);
+            brMotor.setPower(0);
+            isGoToPosition = false;
+            return true;
+
+        }
     }
     private double calculateX(double desiredAngle, double speed) {
         return Math.sin(Math.toRadians(desiredAngle)) * speed;
@@ -825,8 +826,8 @@ public class TeleOpMain extends OpMode {
         }
     }
     public void launch(){
-        launcherL.setVelocity(575);
-        launcherR.setVelocity(-375);
+        launcherL.setVelocity(50);
+        launcherR.setVelocity(-25);
         islaunchRunning = true;
     }
     public void launchSetZero(){
