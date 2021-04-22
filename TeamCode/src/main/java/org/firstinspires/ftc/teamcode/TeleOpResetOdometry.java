@@ -33,7 +33,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 //package org.firstinspires.ftc.robotcontroller.external.samples;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
-import com.qualcomm.hardware.rev.RevColorSensorV3;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
@@ -50,7 +49,6 @@ import com.qualcomm.robotcore.util.ReadWriteFile;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
 
@@ -62,7 +60,7 @@ import java.io.File;
  */
 @TeleOp(name = "Standard Tele Op", group = "Example")
 //@Disabled
-public class TeleOpMain extends OpMode {
+public class TeleOpResetOdometry extends OpMode {
 
     private ElapsedTime runtime = new ElapsedTime(ElapsedTime.Resolution.SECONDS);
     private ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.SECONDS);
@@ -227,6 +225,19 @@ public class TeleOpMain extends OpMode {
 
         gyroAngles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
 
+        if(gamepad1.dpad_up){
+            correctOdometry(8.5, 135.5);//remote upper left corner
+        }
+        else if(gamepad1.dpad_right){
+            correctOdometry(135.5, 135.5);//remote upper right corner
+        }
+        else if(gamepad1.dpad_left)
+        {
+            correctOdometry(8.5, 8.5);//remot1e lower left corner
+        }
+        else if(gamepad1.dpad_down){
+            correctOdometry(135.5,8.5);//remote lower right corner
+        }
         if(gamepad2.left_bumper){
             collectorWheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
             collectorWheel.setPower(-1);
@@ -841,5 +852,17 @@ public class TeleOpMain extends OpMode {
          collectorWheel.setMode(DcMotor.RunMode.RUN_TO_POSITION);
          collectorWheel.setPower(-1);
      }
+    public void correctOdometry(double cornerX, double cornerY){
+        globalPositionUpdate.stop();
+        verticalLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        verticalRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        horizontal.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
+        verticalLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        verticalRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        horizontal.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        globalPositionUpdate = new OdometryGlobalCoordinatePosition(verticalLeft, verticalRight, horizontal, COUNTS_PER_INCH, 75, cornerX, cornerY, 0);
+        positionThread = new Thread(globalPositionUpdate);
+        positionThread.start();
+    }
 }

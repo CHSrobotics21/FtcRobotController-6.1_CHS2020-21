@@ -40,7 +40,7 @@ public class HardwareMapClass {
 
     public HardwareMapClass(){}
 
-    public void init(HardwareMap ahwMap){
+    public void initHwMap(HardwareMap ahwMap){
         hwMap = ahwMap;
 //distanceColor = hwMap.colorSensor.get("distanceColor");
         frMotor = hwMap.dcMotor.get("frontright");

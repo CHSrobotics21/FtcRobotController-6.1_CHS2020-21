@@ -60,7 +60,7 @@ import java.io.File;
  * Demonstrates empty OpMode
  */
 @TeleOp(name = "TestBot", group = "Example")
-//@Disabled
+@Disabled
 public class TeleOpTestBot extends OpMode {
 
     private ElapsedTime runtime = new ElapsedTime(ElapsedTime.Resolution.SECONDS);

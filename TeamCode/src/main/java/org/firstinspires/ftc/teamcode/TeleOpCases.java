@@ -33,7 +33,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 //package org.firstinspires.ftc.robotcontroller.external.samples;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
-import com.qualcomm.hardware.rev.RevColorSensorV3;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
@@ -50,7 +49,6 @@ import com.qualcomm.robotcore.util.ReadWriteFile;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
 
@@ -60,9 +58,9 @@ import java.io.File;
 /**
  * Demonstrates empty OpMode
  */
-@TeleOp(name = "Standard Tele Op", group = "Example")
+@TeleOp(name = "Tele Op Choose", group = "Example")
 //@Disabled
-public class TeleOpMain extends OpMode {
+public class TeleOpCases extends OpMode {
 
     private ElapsedTime runtime = new ElapsedTime(ElapsedTime.Resolution.SECONDS);
     private ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.SECONDS);
@@ -123,6 +121,11 @@ public class TeleOpMain extends OpMode {
     double fieldReference = 0.0;
     boolean perspectiveToggle = false;
     boolean perspectiveCanToggle = false;
+
+    String allianceColor = "", joystickPref = "";
+    boolean selectionButtonPressed = false;
+    int caseNum = 0, joystickMultiplier = 0;
+    float joystickSideX = 0, joystickSideY = 0;
 
     @Override
     public void init() {
@@ -194,17 +197,46 @@ public class TeleOpMain extends OpMode {
     @Override
     public void init_loop() {
         gyroAngles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
-        telemetry.addData("1", "Integrated Heading: " + getIntegratedHeading());
+//        telemetry.addData("1", "Integrated Heading: " + getIntegratedHeading());
+        if(gamepad1.a&&!selectionButtonPressed){
+            caseNum++;//toggle up from case 0 to case...
+            selectionButtonPressed=!selectionButtonPressed;
+        }
+        else if(gamepad1.y&&!selectionButtonPressed){
+            caseNum--;
+            selectionButtonPressed=!selectionButtonPressed;
+        }
+        else if(!gamepad1.a&&!gamepad1.y&&selectionButtonPressed){
+            selectionButtonPressed=!selectionButtonPressed;
+        }
+        switch (caseNum){
+            case 0:
+                if(gamepad1.b){ allianceColor = "red"; joystickMultiplier = 1;}
+                else if (gamepad1.x){ allianceColor = "blue"; joystickMultiplier = -1;}
+                telemetry.addData(" > Set Alliance Color", "Current: " +allianceColor);
+                telemetry.addData("B Button = Red", "X Button = Blue");
+                break;
+            case 1:
+                if(gamepad1.b) { joystickPref = "Left"; }
+                if(gamepad1.x) { joystickPref = "Right"; }
+                telemetry.addData(" > Set Joystick Preference", "Current: " +joystickPref);
+                telemetry.addData("B Button = Right", "X Button = Right");
+                break;
+            default:
+                caseNum = caseNum < 0 ? 0 : caseNum;
+                caseNum = caseNum > 1 ? 1 : caseNum;
+                break;
+        }
 //        telemetry.addData("2", "heading: " + globalPositionUpdate.returnOrientation());
 //        telemetry.addData("StartingPostionX", globalPositionUpdate.returnXCoordinate()/COUNTS_PER_INCH);
 //        telemetry.addData("StartingPostionY", globalPositionUpdate.returnYCoordinate()/COUNTS_PER_INCH);
         // telemetry.addData("1 Right Motor Pos", frMotor.getCurrentPosition());
         // telemetry.addData("2 Left Motor Pos", flMotor.getCurrentPosition());
-
-
-        telemetry.addData("StartingPostionX", startX);
-        telemetry.addData("StartingPostionY", startY);
-        telemetry.addData("StartingOrientation", startOrientation);
+//
+//
+//        telemetry.addData("StartingPostionX", startX);
+//        telemetry.addData("StartingPostionY", startY);
+//        telemetry.addData("StartingOrientation", startOrientation);
         telemetry.update();
     }
 
@@ -379,32 +411,6 @@ public class TeleOpMain extends OpMode {
          {
              launcherCanToggle=true;
          }
-//        else if(intakeDistanceSensor.getDistance(DistanceUnit.INCH)<6.5||intakeDistanceSensor.getDistance(DistanceUnit.INCH)>20&&!stopSensor){
-//            collector.setPower(.7);
-//            moveCollectorWheel();
-//            collectorWheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-//            collectorWheel.setTargetPosition(0);
-//        }
-//        else if(AIlaunch){
-//            collectorWheel.setPower(0);
-//            isCollectorWheel = false;
-//            AIlaunch = false;
-//        }
-//        else{
-//
-//            collectorWheel.setPower(0);
-//            isCollectorWheel = false;
-//
-//        }
-
-
-//        if(gamepad1.left_bumper){
-//            stopSensor = true;
-//        }
-//        if(gamepad1.right_bumper){
-//            stopSensor = false;
-//        }// stop distance sensor movements to run manual
-
         if(gamepad2.b)
         {
             if(gripCanToggle) //make sure that the code doesn't just toggle the thing every iteration as long as the x is held
@@ -502,19 +508,21 @@ public class TeleOpMain extends OpMode {
         {
             perspectiveCanToggle=true;
         }
+        if(joystickPref=="Left"){joystickSideX = gamepad1.left_stick_x; joystickSideY=gamepad1.left_stick_y;}
+        if(joystickPref=="Right"){joystickSideX = gamepad1.right_stick_x; joystickSideY=gamepad1.right_stick_y;}
         if (robotPerspective) { //Controls are mapped to the robot perspective
             fieldReference = 0;
             //Positive values for x axis are joystick right
             //Positive values for y axis are joystick down
-            y = Range.clip(-gamepad1.right_stick_y,-1,1);
-            x = Range.clip(-gamepad1.right_stick_x,-1,1);
+            y = Range.clip(-joystickSideY*joystickMultiplier,-1,1);
+            x = Range.clip(-joystickSideX*joystickMultiplier,-1,1);
             joystickAngle = Math.atan2(x,y);
         } else {   //Controls are mapped to the field
             fieldReference = desiredRobotHeading;
             //Positive values for x axis are joystick right
             //Positive values for y axis are joystick down
-            y = Range.clip(gamepad1.right_stick_x,-1,1);
-            x = Range.clip(-gamepad1.right_stick_y,-1,1);
+            y = Range.clip(joystickSideX*joystickMultiplier,-1,1);
+            x = Range.clip(-joystickSideY*joystickMultiplier,-1,1);
             joystickAngle = Math.atan2(x,y);
             // joystickAngle360 = joystickAngle >= 0 ? joystickAngle : (2*Math.PI) + joystickAngle;
         }
@@ -556,13 +564,12 @@ public class TeleOpMain extends OpMode {
 
         if(!lockDrive)
         {
-
             if(gamepad1.dpad_up){
                 goToPositionSlowDown(111, 70, .7, 0); // go to shooting position
             }
             if(gamepad1.x){
                 goToAngle(111,70,.7,-16, 1 );//angle robot using IMU
-                //powershot 1
+                 //powershot 1
             }
             else if(gamepad1.a){
                 goToAngle(111,70,.7,-20.5, 1 );
@@ -594,23 +601,6 @@ public class TeleOpMain extends OpMode {
                 brMotor.setPower(0);
         }
 
-//        if (gamepad1.b){
-//
-//            launcherAngleR.setPosition(.4);
-//            launcherAngle.setPosition(.4);
-//
-//        }
-//        if(gamepad1.a){
-//
-//            launcherAngleR.setPosition(.5);
-//            launcherAngle.setPosition(.5);
-//
-//        }
-//        if (ringStopperSensor.getDistance(DistanceUnit.CM)<2){
-//            collectorwheelthread.moveCollectorWheel(0);
-//            isWheelRunning = false;
-//        }
-
 //        telemetry.addData("rings: ",rings);
         telemetry.addData("Status", "Run Time: " + runtime.toString());
 //        telemetry.addData("Wobble counts", brMotor.getCurrentPosition());
@@ -621,11 +611,6 @@ public class TeleOpMain extends OpMode {
 //        telemetry.addData("previous: ", topPrevious);
 //        telemetry.addData("current", topCurrent);
 //        telemetry.addData("Distance ring stopper: ", ringStopperSensor.getDistance(DistanceUnit.CM));
-        telemetry.addData("Launcher angle: ", launcherAngleR.getPosition());
-        telemetry.addData("Launcher angle: ", launcherAngle.getPosition());
-        telemetry.addData("Robot angle: ", getIntegratedHeading());
-        telemetry.addData("launcherL velocity: ", launcherL.getVelocity());
-        telemetry.addData("launcherR velocity: ", launcherR.getVelocity());
     }
 
 
@@ -701,7 +686,6 @@ public class TeleOpMain extends OpMode {
         goToPosition(targetXPosition,targetYPosition,robotPower,desiredRobotOrientation,8)) {}
         if (
         goToPosition(targetXPosition,targetYPosition,robotPower-.3,desiredRobotOrientation,1)) {}
-        
     }
     public boolean goToAngle(double targetXPosition, double targetYPosition, double robotPower, double desiredRobotOrientation, double allowableAngleError ) {
         targetXPosition *= COUNTS_PER_INCH;

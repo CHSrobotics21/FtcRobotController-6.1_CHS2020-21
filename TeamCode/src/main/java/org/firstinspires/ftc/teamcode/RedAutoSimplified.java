@@ -107,7 +107,7 @@ public class RedAutoSimplified extends LinearOpMode {
         // first.
         initVuforia();
         initTfod();
-        robo.init(hardwareMap);
+        robo.initHwMap(hardwareMap);
         robo.ringStopper.setPosition(1);
 
 
