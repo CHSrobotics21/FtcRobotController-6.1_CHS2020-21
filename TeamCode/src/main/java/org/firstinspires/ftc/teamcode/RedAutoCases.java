@@ -247,6 +247,7 @@ public class RedAutoCases extends LinearOpMode {
                             break;
                     }
                     telemetry.addData("box: ",box);
+                    telemetry.addData("wobble encoder counts: ", brMotor.getCurrentPosition());
                     telemetry.addData("::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::", "");
                     telemetry.addData("1)  Start Position", startPos);
                     telemetry.addData("2)  Powershot", powershots);
@@ -293,7 +294,7 @@ public class RedAutoCases extends LinearOpMode {
                 goToBoxDeliverWobble(123, 31, true, 0);
             }
             if(wobbleGoal==0){
-                hinge(-500);
+                hinge(-1000);
             }
             if(powershots||towerGoals){
                 launch();
@@ -626,17 +627,23 @@ public class RedAutoCases extends LinearOpMode {
         }
     }
     public void hinge(int threshold){
+        int startingPos = brMotor.getCurrentPosition();
         while(opModeIsActive()&&!(brMotor.getCurrentPosition()>threshold&&brMotor.getCurrentPosition()<threshold+200)) //hinge arm at desired threshold
         {
-            wobbleArmHingeL.setPower(1);
-            wobbleArmHingeR.setPower(-1);
+            if(startingPos>=0){
+                wobbleArmHingeL.setPower(-1);
+                wobbleArmHingeR.setPower(1);
+            }
+            else {
+                wobbleArmHingeL.setPower(1);
+                wobbleArmHingeR.setPower(-1);
+            }
             telemetry.addData("Wobble counts", brMotor.getCurrentPosition());
             telemetry.update();
         }
         wobbleArmHingeL.setPower(0) ;
         wobbleArmHingeR.setPower(0);
     }
-
     public void moveCollectorWheel(int inches)
     { // move collector wheel using encoder
         collectorWheel.setTargetPosition(collectorWheel.getCurrentPosition()- (int)(inches*CPICollectorWheel)); // enter encoder counts or inches you want to move times counts per inch FOR THIS WHEEL AND MOTORS
