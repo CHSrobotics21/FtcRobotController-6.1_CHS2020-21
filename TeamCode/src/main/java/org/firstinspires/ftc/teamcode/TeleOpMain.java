@@ -83,7 +83,7 @@ public class TeleOpMain extends OpMode {
     double driveRotation = 0;
     double a, b, x, y, joystickAngle, joystickAngle360;
     double desiredRobotHeading;
-    int rotations = 0;
+    int rotations = 0, wobbleEncoderCounts = 0;
     final double COUNTS_PER_REV = 8192; // CPR for REV Through Bore Encoders
     final double WHEEL_DIAMETER = 2.3622; //in inches, 38mm for odometry aluminum omni wheels
     double COUNTS_PER_INCH = COUNTS_PER_REV / (WHEEL_DIAMETER * 3.1415);
@@ -121,8 +121,9 @@ public class TeleOpMain extends OpMode {
 
     boolean robotPerspective = false;
     double fieldReference = 0.0;
-    boolean perspectiveToggle = false;
-    boolean perspectiveCanToggle = false;
+    boolean perspectiveToggle = false, perspectiveCanToggle = false;
+
+    boolean isWobble = false;
 
     @Override
     public void init() {
@@ -183,6 +184,7 @@ public class TeleOpMain extends OpMode {
         startY = Double.parseDouble(array[1]);
         startOrientation = Double.parseDouble(array[2]);
 
+
         telemetry.addData("StartingPostionX", startX);
         telemetry.addData("StartingPostionY", startY);
         telemetry.addData("StartingOrientation", startOrientation);
@@ -212,7 +214,7 @@ public class TeleOpMain extends OpMode {
     @Override
     public void start() {
         runtime.reset();
-        globalPositionUpdate = new OdometryGlobalCoordinatePosition(verticalLeft, verticalRight, horizontal, COUNTS_PER_INCH, 75, 0,0,0);//startX, startY, startOrientation);
+        globalPositionUpdate = new OdometryGlobalCoordinatePosition(verticalLeft, verticalRight, horizontal, COUNTS_PER_INCH, 75, startX, startY, startOrientation);
         positionThread = new Thread(globalPositionUpdate);
 
         positionThread.start();
@@ -419,7 +421,8 @@ public class TeleOpMain extends OpMode {
                 //if the launcher isn't currently running, run this code to turn it on:
                 else
                 {
-                    grip(true); //turn on the launcher motor
+                    grip(true); //grip
+                    isWobble = true;
                     gripToggle=true; //remember that the launcher motor has been turned on
                 }
             }
@@ -626,6 +629,7 @@ public class TeleOpMain extends OpMode {
         telemetry.addData("Robot angle: ", getIntegratedHeading());
         telemetry.addData("launcherL velocity: ", launcherL.getVelocity());
         telemetry.addData("launcherR velocity: ", launcherR.getVelocity());
+        telemetry.addData("ring sensor data: ", ringStopperSensor.getDistance(DistanceUnit.CM));
     }
 
 
@@ -826,8 +830,8 @@ public class TeleOpMain extends OpMode {
         }
     }
     public void launch(){
-        launcherL.setVelocity(50);
-        launcherR.setVelocity(-25);
+        launcherL.setVelocity(-4500);
+        launcherR.setVelocity(4000);
         islaunchRunning = true;
     }
     public void launchSetZero(){

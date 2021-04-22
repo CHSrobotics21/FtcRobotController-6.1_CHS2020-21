@@ -63,9 +63,9 @@ import java.util.List;
  * IMPORTANT: In order to use this OpMode, you need to obtain your own Vuforia license key as
  * is explained below.
  */
-@Autonomous(name = "Red Auto Choose", group = "TFOdometry")
+@Autonomous(name = "Blue Auto Chose", group = "TFOdometry")
 //@Disabled
-public class RedAutoCases extends LinearOpMode {
+public class BlueAutoCases extends LinearOpMode {
     private static final String TFOD_MODEL_ASSET = "UltimateGoal.tflite";
     private static final String LABEL_FIRST_ELEMENT = "Quad";
     private static final String LABEL_SECOND_ELEMENT = "Single";
@@ -95,7 +95,7 @@ public class RedAutoCases extends LinearOpMode {
     boolean towerGoals = false, powershots = false, selectionButtonPressed = false, buttonPressed = false;
 
     File TeleOpStartingPos = AppUtil.getInstance().getSettingsFile("TeleOpStartingPos.txt");
-    File WobbleEncoder = AppUtil.getInstance().getSettingsFile("WobbleEncoder.txt");
+    File RingSensorData = AppUtil.getInstance().getSettingsFile("RingSensorData.txt");
     OdometryGlobalCoordinatePosition globalPositionUpdate;
 
 
@@ -145,7 +145,75 @@ public class RedAutoCases extends LinearOpMode {
         telemetry.update();
         while(!isStarted()&& !isStopRequested()){
             //start version selection
+            if(gamepad1.a&&!selectionButtonPressed){
+                caseNum++;//toggle up from case 0 to case...
+                selectionButtonPressed=!selectionButtonPressed;
+            }
+            else if(gamepad1.y&&!selectionButtonPressed){
+                caseNum--;//toggle down from current case
+                selectionButtonPressed=!selectionButtonPressed;
+            }
+            else if(!gamepad1.a&&!gamepad1.y&&selectionButtonPressed){
+                selectionButtonPressed=!selectionButtonPressed;
+            }
+            switch(caseNum){
+                case 0://first case
+                    if(gamepad1.b) {startPos = "Rt";}//starting position will be on the right
+                    if(gamepad1.x) {startPos = "Lt";}//starting position will be on the left (only label not assigning values yet)
 
+                    telemetry.addData("> Set Start Position", "Current Value: " + startPos);
+                    telemetry.addData("B Button = Right", "X Button = Left");
+                    break;
+
+                case 1:  //Powershot selection
+                    if(gamepad1.b) {powershots = true;}
+                    if(gamepad1.x) {powershots = false;}
+
+                    telemetry.addData("> Set PowerShot", "Current Value: " + powershots);
+                    telemetry.addData("B Button = Yes", "X Button = No");
+                    break;
+
+                case 2:  //Tower Goal selection
+                    if(gamepad1.b) {towerGoals = true;}
+                    if(gamepad1.x) {towerGoals = false;}
+
+                    telemetry.addData("> Set Tower Goal", "Current Value: " + towerGoals);
+                    telemetry.addData("B Button = Yes", "X Button = No");
+                    break;
+
+                case 3:  //Starting delay selection
+                    if(gamepad1.b && !buttonPressed) {
+                        startingDelay++;//toggle up the delay time
+                        buttonPressed = !buttonPressed;
+                    } else if(gamepad1.x && !buttonPressed) {
+                        startingDelay--;//toggle down the delay time
+                        buttonPressed = !buttonPressed;
+                    } else if (!gamepad1.b && !gamepad1.x && buttonPressed) {
+                        buttonPressed = !buttonPressed;
+                    }
+                    telemetry.addData("> Set Start Delay", "Current Value: " + startingDelay + " seconds");
+                    telemetry.addData("B Button to increase", "X Button to decrease");
+                    break;
+                case 4: // 0,1, or both wobble goals; position for second wobble goal may be different each time :O
+                    if(gamepad1.b && !buttonPressed) {
+                        wobbleGoal++;//toggle up the delay time
+                        buttonPressed = !buttonPressed;
+                    } else if(gamepad1.x && !buttonPressed) {
+                        wobbleGoal--;//toggle down the delay time
+                        buttonPressed = !buttonPressed;
+                    } else if (!gamepad1.b && !gamepad1.x && buttonPressed) {
+                        buttonPressed = !buttonPressed;
+                    }
+                    wobbleGoal = wobbleGoal < 0 ? 0 : wobbleGoal;
+                    wobbleGoal = wobbleGoal > 2 ? 2 : wobbleGoal;
+                    telemetry.addData("> Set # of wobble goals to score", "Current Value: " + wobbleGoal + " wobble goals to score");
+                    telemetry.addData("B Button to increase", "X Button to decrease");
+                    break;
+                default:
+                    caseNum = caseNum < 0 ? 0 : caseNum;//if caseNum is less than 0, set it back to 0 so you are not in the neagtive, if greater than 0, then caseNum = caseNum
+                    caseNum = caseNum > 4 ? 4 : caseNum;// if caseNum exceeds the number of cases, set it back to the limit, else set it to caseNum
+                    break;
+            }
             if (tfod != null) { // checks for object
                 // getUpdatedRecognitions() will return null if no new information is available since
                 // the last time that call was made.
@@ -176,75 +244,6 @@ public class RedAutoCases extends LinearOpMode {
                             }
                         }
 
-                    }
-                    if(gamepad1.a&&!selectionButtonPressed){
-                        caseNum++;//toggle up from case 0 to case...
-                        selectionButtonPressed=!selectionButtonPressed;
-                    }
-                    else if(gamepad1.y&&!selectionButtonPressed){
-                        caseNum--;//toggle down from current case
-                        selectionButtonPressed=!selectionButtonPressed;
-                    }
-                    else if(!gamepad1.a&&!gamepad1.y&&selectionButtonPressed){
-                        selectionButtonPressed=!selectionButtonPressed;
-                    }
-                    switch(caseNum){
-                        case 0://first case
-                            if(gamepad1.b) {startPos = "Rt";}//starting position will be on the right
-                            if(gamepad1.x) {startPos = "Lt";}//starting position will be on the left (only label not assigning values yet)
-
-                            telemetry.addData("> Set Start Position", "Current Value: " + startPos);
-                            telemetry.addData("B Button = Right", "X Button = Left");
-                            break;
-
-                        case 1:  //Powershot selection
-                            if(gamepad1.b) {powershots = true;}
-                            if(gamepad1.x) {powershots = false;}
-
-                            telemetry.addData("> Set PowerShot", "Current Value: " + powershots);
-                            telemetry.addData("B Button = Yes", "X Button = No");
-                            break;
-
-                        case 2:  //Tower Goal selection
-                            if(gamepad1.b) {towerGoals = true;}
-                            if(gamepad1.x) {towerGoals = false;}
-
-                            telemetry.addData("> Set Tower Goal", "Current Value: " + towerGoals);
-                            telemetry.addData("B Button = Yes", "X Button = No");
-                            break;
-
-                        case 3:  //Starting delay selection
-                            if(gamepad1.b && !buttonPressed) {
-                                startingDelay++;//toggle up the delay time
-                                buttonPressed = !buttonPressed;
-                            } else if(gamepad1.x && !buttonPressed) {
-                                startingDelay--;//toggle down the delay time
-                                buttonPressed = !buttonPressed;
-                            } else if (!gamepad1.b && !gamepad1.x && buttonPressed) {
-                                buttonPressed = !buttonPressed;
-                            }
-                            telemetry.addData("> Set Start Delay", "Current Value: " + startingDelay + " seconds");
-                            telemetry.addData("B Button to increase", "X Button to decrease");
-                            break;
-                        case 4: // 0,1, or both wobble goals; position for second wobble goal may be different each time :O
-                            if(gamepad1.b && !buttonPressed) {
-                                wobbleGoal++;//toggle up the delay time
-                                buttonPressed = !buttonPressed;
-                            } else if(gamepad1.x && !buttonPressed) {
-                                wobbleGoal--;//toggle down the delay time
-                                buttonPressed = !buttonPressed;
-                            } else if (!gamepad1.b && !gamepad1.x && buttonPressed) {
-                                buttonPressed = !buttonPressed;
-                            }
-                            wobbleGoal = wobbleGoal < 0 ? 0 : wobbleGoal;
-                            wobbleGoal = wobbleGoal > 2 ? 2 : wobbleGoal;
-                            telemetry.addData("> Set # of wobble goals to score", "Current Value: " + wobbleGoal + " wobble goals to score");
-                            telemetry.addData("B Button to increase", "X Button to decrease");
-                            break;
-                        default:
-                            caseNum = caseNum < 0 ? 0 : caseNum;//if caseNum is less than 0, set it back to 0 so you are not in the neagtive, if greater than 0, then caseNum = caseNum
-                            caseNum = caseNum > 4 ? 4 : caseNum;// if caseNum exceeds the number of cases, set it back to the limit, else set it to caseNum
-                            break;
                     }
                     telemetry.addData("box: ",box);
                     telemetry.addData("::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::", "");
@@ -292,21 +291,11 @@ public class RedAutoCases extends LinearOpMode {
             if(wobbleGoal>0) {
                 goToBoxDeliverWobble(123, 31, true, 0);
             }
-            if(wobbleGoal==0){
-                hinge(-500);
-            }
             if(powershots||towerGoals){
                 launch();
             }
             if(powershots) {
-
-                goToPositionSetZero(111,70,.7,0,2);
-                goToAngle(111,70,.7,-16,2);
-                elapsedTime.reset();
-                while (opModeIsActive() && (ringStopperSensor.getDistance(DistanceUnit.CM) < 4.7 && elapsedTime.time() < 2)) {//ring is under distance sensor but deliver it to launcher (while loop ensures that the ring is no longer in the system and is shot)
-                    collectorWheel.setPower(-1);
-                }
-                collectorWheel.setPower(0);
+                powershot(-16); // first powershot
                 sleep(2000);
                 powershot(-20.5); // second powershot
                 sleep(2000);
@@ -314,7 +303,7 @@ public class RedAutoCases extends LinearOpMode {
                 sleep(500);
             }
             else if(towerGoals){
-                goToPositionSetZero(111,60,.7,0,2);
+                goToPositionSetZero(111,60,.6,0,2);
                 conveyRing();
                 sleep(1500);
                 conveyRing();
@@ -326,6 +315,7 @@ public class RedAutoCases extends LinearOpMode {
                 launchSetZero(); // stop launchers
             }
             if(wobbleGoal == 2){
+                sleep(750);// make sure wobble goal is gripped
                 goToBoxDeliverWobble(76.5, 61, false, 6);//go back to box to deliver second wobble goal (go to position, lift arm higher, ungrip)
                 sleep(750);// make sure wobble goal is delivered
             }
@@ -333,8 +323,7 @@ public class RedAutoCases extends LinearOpMode {
 
             String ContentsToWriteToFile = (globalPositionUpdate.returnXCoordinate()/COUNTS_PER_INCH) + " " + (globalPositionUpdate.returnYCoordinate()/COUNTS_PER_INCH) + " " + (globalPositionUpdate.returnOrientation());
             ReadWriteFile.writeFile(TeleOpStartingPos, ContentsToWriteToFile);
-            ringFileContents = brMotor.getCurrentPosition() +"";
-            ReadWriteFile.writeFile(WobbleEncoder, ringFileContents);
+            ReadWriteFile.writeFile(RingSensorData, ringFileContents);
             //goToPositionSlowDown(111, 24, .6, 0, 2); // go back to starting position for programmers testing ease :)
         }
         if (tfod != null) { //stop button
@@ -643,10 +632,9 @@ public class RedAutoCases extends LinearOpMode {
         collectorWheel.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         collectorWheel.setPower(1);
     }
-
     public void launch(){
-        launcherL.setVelocity(-4500);
-        launcherR.setVelocity(4000);
+        launcherL.setVelocity(575);
+        launcherR.setVelocity(-375);
     }
     public void launchSetZero(){
         launcherL.setVelocity(0);
@@ -654,14 +642,15 @@ public class RedAutoCases extends LinearOpMode {
     }
     public void goToBoxDeliverWobble(double goAroundRingsCoorX, double goAroundRingsCoorY, boolean doHingeArm, int comeback) {
         if (box == "a") {
-            goToPositionSlowDown(115-comeback, 79+comeback, .85, 0, 8);// box a
+            goToPositionSlowDown(15+comeback, 79-comeback, .85, -90, 8);// box a might hit wobble goal
         }
         else if (box == "b" || box == "c") {
             goToPositionSetZero(goAroundRingsCoorX, goAroundRingsCoorY, .85, 0, 8); // First movement out of starting postition to strafe to the first box
+            //15-20ish goAroundX, same y?
             if (box == "b") {
-                goToPositionSlowDown(94-comeback, 103+comeback, .7, 0, 8);// box b
+                goToPositionSlowDown(27-comeback, 103+comeback, .7, 0, 8);// box b
             } else {//box c
-                goToPositionSlowDown(115-comeback, 127-comeback, .7, 0, 8);
+                goToPositionSlowDown(15-comeback, 127-comeback, .7, -90, 8);
             }
         }
         if (doHingeArm) {
@@ -675,6 +664,7 @@ public class RedAutoCases extends LinearOpMode {
         grip(false); //ungrip wobble goal to release and deliver
 
     }
+    //blue side box a, b, and c
     public void goToPositionSlowDown(double targetXPosition, double targetYPosition, double robotPower, double desiredRobotOrientation, double allowableDistanceError ){
         goToPositionSetZero(targetXPosition,targetYPosition,robotPower,desiredRobotOrientation,8);
         goToPositionSetZero(targetXPosition,targetYPosition,robotPower-.3,desiredRobotOrientation,1.2);

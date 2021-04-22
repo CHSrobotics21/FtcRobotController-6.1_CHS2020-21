@@ -58,7 +58,7 @@ import java.io.File;
 /**
  * Demonstrates empty OpMode
  */
-@TeleOp(name = "Standard Tele Op", group = "Example")
+@TeleOp(name = "Tele Reset Odometry", group = "Example")
 //@Disabled
 public class TeleOpResetOdometry extends OpMode {
 

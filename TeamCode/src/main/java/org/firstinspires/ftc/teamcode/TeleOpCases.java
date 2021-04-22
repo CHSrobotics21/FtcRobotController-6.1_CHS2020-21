@@ -244,7 +244,7 @@ public class TeleOpCases extends OpMode {
     @Override
     public void start() {
         runtime.reset();
-        globalPositionUpdate = new OdometryGlobalCoordinatePosition(verticalLeft, verticalRight, horizontal, COUNTS_PER_INCH, 75, 0,0,0);//startX, startY, startOrientation);
+        globalPositionUpdate = new OdometryGlobalCoordinatePosition(verticalLeft, verticalRight, horizontal, COUNTS_PER_INCH, 75, startX, startY, startOrientation);
         positionThread = new Thread(globalPositionUpdate);
 
         positionThread.start();
