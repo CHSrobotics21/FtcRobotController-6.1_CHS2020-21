@@ -30,6 +30,7 @@
 package org.firstinspires.ftc.OriginalExamples;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -64,7 +65,7 @@ import java.util.List;
  * is explained below.
  */
 @Autonomous(name = "LauncherTesting", group = "TFOdometry")
-//@Disabled
+@Disabled
 public class LauncherTesting extends LinearOpMode {
     DcMotor launcherL, launcherR;
     @Override

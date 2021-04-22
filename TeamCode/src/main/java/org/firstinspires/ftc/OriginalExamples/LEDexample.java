@@ -8,7 +8,7 @@ import com.qualcomm.robotcore.hardware.LED;
 
 
 @TeleOp(name="LED example")
-//@Disabled
+@Disabled
 public class LEDexample extends OpMode
 {
     boolean toggle = false;

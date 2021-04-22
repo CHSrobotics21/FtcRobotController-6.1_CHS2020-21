@@ -32,6 +32,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 //package org.firstinspires.ftc.robotcontroller.external.samples;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
@@ -61,7 +62,7 @@ import java.io.File;
  * Demonstrates empty OpMode
  */
 @TeleOp(name = "Robert&Evie", group = "Example")
-//@Disabled
+@Disabled
 public class StandardTeleOp extends OpMode {
 
     private ElapsedTime runtime = new ElapsedTime(ElapsedTime.Resolution.SECONDS);
