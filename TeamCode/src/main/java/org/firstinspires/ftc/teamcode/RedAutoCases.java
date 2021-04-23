@@ -247,6 +247,7 @@ public class RedAutoCases extends LinearOpMode {
                             break;
                     }
                     telemetry.addData("box: ",box);
+                    telemetry.addData("wobble encoder counts: ", brMotor.getCurrentPosition());
                     telemetry.addData("::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::", "");
                     telemetry.addData("1)  Start Position", startPos);
                     telemetry.addData("2)  Powershot", powershots);
@@ -293,15 +294,15 @@ public class RedAutoCases extends LinearOpMode {
                 goToBoxDeliverWobble(123, 31, true, 0);
             }
             if(wobbleGoal==0){
-                hinge(-500);
+                hinge(-1000);
             }
             if(powershots||towerGoals){
                 launch();
             }
             if(powershots) {
 
-                goToPositionSetZero(111,70,.7,0,2);
-                goToAngle(111,70,.7,-16,2);
+                goToPositionSetZero(111,66,.7,0,2);
+                goToAngleSetZero(111,66,.7,-16,2);
                 elapsedTime.reset();
                 while (opModeIsActive() && (ringStopperSensor.getDistance(DistanceUnit.CM) < 4.7 && elapsedTime.time() < 2)) {//ring is under distance sensor but deliver it to launcher (while loop ensures that the ring is no longer in the system and is shot)
                     collectorWheel.setPower(-1);
@@ -314,7 +315,8 @@ public class RedAutoCases extends LinearOpMode {
                 sleep(500);
             }
             else if(towerGoals){
-                goToPositionSetZero(111,60,.7,0,2);
+                goToPositionSetZero(103,60,.7,0,2);
+                sleep(500);
                 conveyRing();
                 sleep(1500);
                 conveyRing();
@@ -626,27 +628,32 @@ public class RedAutoCases extends LinearOpMode {
         }
     }
     public void hinge(int threshold){
+        int startingPos = brMotor.getCurrentPosition();
         while(opModeIsActive()&&!(brMotor.getCurrentPosition()>threshold&&brMotor.getCurrentPosition()<threshold+200)) //hinge arm at desired threshold
         {
-            wobbleArmHingeL.setPower(1);
-            wobbleArmHingeR.setPower(-1);
+            if(startingPos>=0){
+                wobbleArmHingeL.setPower(-1);
+                wobbleArmHingeR.setPower(1);
+            }
+            else {
+                wobbleArmHingeL.setPower(1);
+                wobbleArmHingeR.setPower(-1);
+            }
             telemetry.addData("Wobble counts", brMotor.getCurrentPosition());
             telemetry.update();
         }
         wobbleArmHingeL.setPower(0) ;
         wobbleArmHingeR.setPower(0);
     }
-
     public void moveCollectorWheel(int inches)
     { // move collector wheel using encoder
         collectorWheel.setTargetPosition(collectorWheel.getCurrentPosition()- (int)(inches*CPICollectorWheel)); // enter encoder counts or inches you want to move times counts per inch FOR THIS WHEEL AND MOTORS
         collectorWheel.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         collectorWheel.setPower(1);
     }
-
     public void launch(){
-        launcherL.setVelocity(-4500);
-        launcherR.setVelocity(4000);
+        launcherL.setVelocity(-3500);
+        launcherR.setVelocity(3000);
     }
     public void launchSetZero(){
         launcherL.setVelocity(0);
@@ -680,7 +687,7 @@ public class RedAutoCases extends LinearOpMode {
         goToPositionSetZero(targetXPosition,targetYPosition,robotPower-.3,desiredRobotOrientation,1.2);
     }
     public void powershot(double robotAngle){
-        goToAngleSetZero(111,70,.7,robotAngle, 1 );
+        goToAngleSetZero(111,66,.7,robotAngle, 1 );
         conveyRing();
         //goToPositionSetZero(115,65, .6,0,1);//since you are wanting to change the angle of robot, one way to solve issue of robot dancing due to the precision of angles is to move away so then the next loop you will move back and it won't dance
     }
