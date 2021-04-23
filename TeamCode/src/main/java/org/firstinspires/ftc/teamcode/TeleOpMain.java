@@ -787,7 +787,9 @@ public class TeleOpMain extends OpMode {
 
     @Override
     public void stop() {
-        globalPositionUpdate.stop();
+        if(globalPositionUpdate!=null) {
+            globalPositionUpdate.stop();
+        }
     }
 
     private double getIntegratedHeading() {

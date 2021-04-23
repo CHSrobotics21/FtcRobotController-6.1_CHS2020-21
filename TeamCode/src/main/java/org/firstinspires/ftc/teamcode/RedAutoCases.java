@@ -301,8 +301,8 @@ public class RedAutoCases extends LinearOpMode {
             }
             if(powershots) {
 
-                goToPositionSetZero(111,70,.7,0,2);
-                goToAngle(111,70,.7,-16,2);
+                goToPositionSetZero(111,66,.7,0,2);
+                goToAngleSetZero(111,66,.7,-16,2);
                 elapsedTime.reset();
                 while (opModeIsActive() && (ringStopperSensor.getDistance(DistanceUnit.CM) < 4.7 && elapsedTime.time() < 2)) {//ring is under distance sensor but deliver it to launcher (while loop ensures that the ring is no longer in the system and is shot)
                     collectorWheel.setPower(-1);
@@ -315,7 +315,8 @@ public class RedAutoCases extends LinearOpMode {
                 sleep(500);
             }
             else if(towerGoals){
-                goToPositionSetZero(111,60,.7,0,2);
+                goToPositionSetZero(103,60,.7,0,2);
+                sleep(500);
                 conveyRing();
                 sleep(1500);
                 conveyRing();
@@ -650,10 +651,9 @@ public class RedAutoCases extends LinearOpMode {
         collectorWheel.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         collectorWheel.setPower(1);
     }
-
     public void launch(){
-        launcherL.setVelocity(-4500);
-        launcherR.setVelocity(4000);
+        launcherL.setVelocity(-3500);
+        launcherR.setVelocity(3000);
     }
     public void launchSetZero(){
         launcherL.setVelocity(0);
@@ -687,7 +687,7 @@ public class RedAutoCases extends LinearOpMode {
         goToPositionSetZero(targetXPosition,targetYPosition,robotPower-.3,desiredRobotOrientation,1.2);
     }
     public void powershot(double robotAngle){
-        goToAngleSetZero(111,70,.7,robotAngle, 1 );
+        goToAngleSetZero(111,66,.7,robotAngle, 1 );
         conveyRing();
         //goToPositionSetZero(115,65, .6,0,1);//since you are wanting to change the angle of robot, one way to solve issue of robot dancing due to the precision of angles is to move away so then the next loop you will move back and it won't dance
     }
