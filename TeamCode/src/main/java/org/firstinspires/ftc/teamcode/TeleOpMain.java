@@ -832,7 +832,7 @@ public class TeleOpMain extends OpMode {
         }
     }
     public void launch(){
-        launcherL.setVelocity(-4500);
+        launcherL.setVelocity(-4250);
         launcherR.setVelocity(4000);
         islaunchRunning = true;
     }
