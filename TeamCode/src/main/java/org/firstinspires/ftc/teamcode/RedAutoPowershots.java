@@ -209,13 +209,9 @@ public class RedAutoPowershots extends LinearOpMode {
             powershot(16);
             powershot(20.5);
             powershot(25);
-
-//            collectorWheel.setPower(-1);39
-//            sleep(5000);
-//            collectorWheel.setPower(0); // stop collector wheel in case it is still running
             /*^end of powershot shooting^*/
             launchSetZero(); // stop launchers
-             goToPositionSetZero(80,80,.9,0,2);//parking behind white
+             goToPositionSetZero(80,80,.9,0,2);//parking white
 
             String ContentsToWriteToFile = (globalPositionUpdate.returnXCoordinate()/COUNTS_PER_INCH) + " " + (globalPositionUpdate.returnYCoordinate()/COUNTS_PER_INCH) + " " + (globalPositionUpdate.returnOrientation());
             ReadWriteFile.writeFile(TeleOpStartingPos, ContentsToWriteToFile);

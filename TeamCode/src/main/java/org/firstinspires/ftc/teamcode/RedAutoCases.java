@@ -265,7 +265,7 @@ public class RedAutoCases extends LinearOpMode {
                 startX=129;
             }
             else if(startPos == "Lt"){
-                startX =111;
+                startX =120;
             }
             globalPositionUpdate = new OdometryGlobalCoordinatePosition(verticalLeft, verticalRight, horizontal, COUNTS_PER_INCH, 75, startX, 8.5, 0.0);
             Thread positionThread = new Thread(globalPositionUpdate);
@@ -278,8 +278,8 @@ public class RedAutoCases extends LinearOpMode {
             // starting postion for linear actuators
             if(powershots)
             {
-                launcherAngle.setPosition(.33);
-                launcherAngleR.setPosition(.33);
+                launcherAngle.setPosition(.336);
+                launcherAngleR.setPosition(.336);
             }
             else if(towerGoals){
                 launcherAngle.setPosition(.36);
@@ -293,11 +293,19 @@ public class RedAutoCases extends LinearOpMode {
             if(wobbleGoal>0) {
                 goToBoxDeliverWobble(123, 31, true, 0);
             }
+            goToPositionSetZero(120, 60, .7,0,2);
+            goToPositionSetZero(120,12, .7, 0, 2);
+            timer.reset();
+            while(timer.time()<5000){
+            }
             if(wobbleGoal==0){
                 hinge(-1000);
             }
             if(powershots||towerGoals){
                 launch();
+            }
+            if(towerGoals||powershots&&(box == "b"||box == "c")){
+                goToPositionSetZero(120, 50, .7,0,2);
             }
             if(powershots) {
 
@@ -315,7 +323,8 @@ public class RedAutoCases extends LinearOpMode {
                 sleep(500);
             }
             else if(towerGoals){
-                goToPositionSetZero(103,60,.7,0,2);
+
+                goToPositionSetZero(103,62,.7,-5,2);
                 sleep(500);
                 conveyRing();
                 sleep(1500);
@@ -331,7 +340,7 @@ public class RedAutoCases extends LinearOpMode {
                 goToBoxDeliverWobble(76.5, 61, false, 6);//go back to box to deliver second wobble goal (go to position, lift arm higher, ungrip)
                 sleep(750);// make sure wobble goal is delivered
             }
-            goToPositionSetZero(80,80,.9,0,2);//parking  white
+            goToPositionSetZero(90,80,.9,0,2);//parking  white
 
             String ContentsToWriteToFile = (globalPositionUpdate.returnXCoordinate()/COUNTS_PER_INCH) + " " + (globalPositionUpdate.returnYCoordinate()/COUNTS_PER_INCH) + " " + (globalPositionUpdate.returnOrientation());
             ReadWriteFile.writeFile(TeleOpStartingPos, ContentsToWriteToFile);
@@ -652,8 +661,8 @@ public class RedAutoCases extends LinearOpMode {
         collectorWheel.setPower(1);
     }
     public void launch(){
-        launcherL.setVelocity(-3500);
-        launcherR.setVelocity(3000);
+        launcherL.setVelocity(-4250);
+        launcherR.setVelocity(4000);
     }
     public void launchSetZero(){
         launcherL.setVelocity(0);
