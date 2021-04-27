@@ -265,7 +265,7 @@ public class BlueAutoCasess extends LinearOpMode {
                 startX=37;
             }
             else if(startPos == "Lt"){
-                startX =13;
+                startX =18;
             }
             globalPositionUpdate = new OdometryGlobalCoordinatePosition(verticalLeft, verticalRight, horizontal, COUNTS_PER_INCH, 75, startX, 8.5, 0.0);
             Thread positionThread = new Thread(globalPositionUpdate);
@@ -278,8 +278,8 @@ public class BlueAutoCasess extends LinearOpMode {
             // starting postion for linear actuators
             if(powershots)
             {
-                launcherAngle.setPosition(.33);
-                launcherAngleR.setPosition(.33);
+                launcherAngle.setPosition(.336);
+                launcherAngleR.setPosition(.336);
             }
             else if(towerGoals){
                 launcherAngle.setPosition(.36);
@@ -299,10 +299,13 @@ public class BlueAutoCasess extends LinearOpMode {
             if(powershots||towerGoals){
                 launch();
             }
+            if(towerGoals||powershots&&(box == "b"||box == "c")){
+                goToPositionSetZero(21, 31, .7, 0, 8); // First movement out of starting postition to strafe to the first box
+            }
             if(powershots) {
 
-                goToPositionSetZero(54,66,.7,0,2);
-                goToAngleSetZero(54,66,.7,-16,2);
+                goToPositionSetZero(33,66,.7,0,2);
+                goToAngleSetZero(33,66,.7,16,2);
                 elapsedTime.reset();
                 while (opModeIsActive() && (ringStopperSensor.getDistance(DistanceUnit.CM) < 4.7 && elapsedTime.time() < 2)) {//ring is under distance sensor but deliver it to launcher (while loop ensures that the ring is no longer in the system and is shot)
                     collectorWheel.setPower(-1);
@@ -315,7 +318,8 @@ public class BlueAutoCasess extends LinearOpMode {
                 sleep(500);
             }
             else if(towerGoals){
-                goToPositionSetZero(32,60,.7,0,2);
+                goToPositionSetZero(34,57,.7,0,2);
+                goToAngleSetZero(34, 57, .7, 0, 2);
                 sleep(500);
                 conveyRing();
                 sleep(1500);
@@ -327,11 +331,13 @@ public class BlueAutoCasess extends LinearOpMode {
             if(towerGoals||powershots){
                 launchSetZero(); // stop launchers
             }
+
             if(wobbleGoal == 2){
                 goToBoxDeliverWobble(32, 61, false, 6);//go back to box to deliver second wobble goal (go to position, lift arm higher, ungrip)
                 sleep(750);// make sure wobble goal is delivered
             }
-            goToPositionSetZero(60,80,.9,0,2);//parking  white
+
+            goToPositionSetZero(22,80,.9,0,2);//parking  white
 
             String ContentsToWriteToFile = (globalPositionUpdate.returnXCoordinate()/COUNTS_PER_INCH) + " " + (globalPositionUpdate.returnYCoordinate()/COUNTS_PER_INCH) + " " + (globalPositionUpdate.returnOrientation());
             ReadWriteFile.writeFile(TeleOpStartingPos, ContentsToWriteToFile);
