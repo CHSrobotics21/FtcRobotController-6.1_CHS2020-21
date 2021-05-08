@@ -250,20 +250,20 @@ public class TeleOpMain extends OpMode {
             isWheelRunning = false;
         }
 //
-//        if(timer.time()>2&&timer.time()<2.05){
-//            rings++;
-//            collectorWheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-//            collectorWheel.setPower(0);
-//        }
-//        topPrevious = topCurrent;
-//        topCurrent = ringStopperSensor.getDistance(DistanceUnit.CM)<4.6&&ringStopperSensor.getDistance(DistanceUnit.CM)>0;
-//        if (topPrevious && !topCurrent){
-//            rings--;
-//        }
-//        if (ringStopperSensor.getDistance(DistanceUnit.CM)<4.6&&ringStopperSensor.getDistance(DistanceUnit.CM)>0 && islaunchRunning){
-//            moveCollectorWheel();
-//            isWheelRunning = false;
-//        }
+        if(timer.time()>2&&timer.time()<2.05){
+            rings++;
+            collectorWheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            collectorWheel.setPower(0);
+        }
+        topPrevious = topCurrent;
+        topCurrent = ringStopperSensor.getDistance(DistanceUnit.CM)<4.6&&ringStopperSensor.getDistance(DistanceUnit.CM)>0;
+        if (topPrevious && !topCurrent){
+            rings--;
+        }
+        if (ringStopperSensor.getDistance(DistanceUnit.CM)<4.6&&ringStopperSensor.getDistance(DistanceUnit.CM)>0 && islaunchRunning){
+            moveCollectorWheel();
+            isWheelRunning = false;
+        }
 //        else if(gamepad2.left_trigger>.05){
 //            isWheelRunning = true;
 //            collectorwheelthread.moveCollectorWheel(8, false);
@@ -276,16 +276,16 @@ public class TeleOpMain extends OpMode {
 //        }
 
         if (gamepad2.dpad_down){
-            launcherAngleR.setPosition(.33);
-            launcherAngle.setPosition(.33);
+            launcherAngleR.setPosition(.25);
+            launcherAngle.setPosition(.25);
         }
         if (gamepad2.dpad_left){
-            launcherAngleR.setPosition(.3);
-            launcherAngle.setPosition(.3);
+            launcherAngleR.setPosition(.35);
+            launcherAngle.setPosition(.35);
         }
         if (gamepad2.dpad_up){
-            launcherAngleR.setPosition(.36);
-            launcherAngle.setPosition(.36);
+            launcherAngleR.setPosition(.42);
+            launcherAngle.setPosition(.42);
         }
         if(gamepad2.dpad_right){
             if(ringStopperCanToggle) //make sure that the code doesn't just toggle the thing every iteration as long as the trigger's held
@@ -398,14 +398,6 @@ public class TeleOpMain extends OpMode {
 //            isCollectorWheel = false;
 //
 //        }
-
-
-//        if(gamepad1.left_bumper){
-//            stopSensor = true;
-//        }
-//        if(gamepad1.right_bumper){
-//            stopSensor = false;
-//        }// stop distance sensor movements to run manual
 
         if(gamepad2.b)
         {
@@ -832,8 +824,8 @@ public class TeleOpMain extends OpMode {
         }
     }
     public void launch(){
-        launcherL.setVelocity(-4250);
-        launcherR.setVelocity(4000);
+        launcherL.setVelocity(-1000);
+        launcherR.setVelocity(3000);//accurate; too strong
         islaunchRunning = true;
     }
     public void launchSetZero(){

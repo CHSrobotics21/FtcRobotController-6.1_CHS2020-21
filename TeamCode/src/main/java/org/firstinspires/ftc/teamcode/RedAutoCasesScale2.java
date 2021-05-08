@@ -63,9 +63,9 @@ import java.util.List;
  * IMPORTANT: In order to use this OpMode, you need to obtain your own Vuforia license key as
  * is explained below.
  */
-@Autonomous(name = "Red Auto Choose", group = "TFOdometry")
+@Autonomous(name = "Red Auto Choose Scale", group = "TFOdometry")
 //@Disabled
-public class RedAutoCases extends LinearOpMode {
+public class RedAutoCasesScale2 extends LinearOpMode {
     private static final String TFOD_MODEL_ASSET = "UltimateGoal.tflite";
     private static final String LABEL_FIRST_ELEMENT = "Quad";
     private static final String LABEL_SECOND_ELEMENT = "Single";
@@ -74,7 +74,7 @@ public class RedAutoCases extends LinearOpMode {
     /* Encoder Variables to use Counts per inch on Odometry and conveyance middle wheel */
     final double COUNTS_PER_REV = 8192; // CPR for REV Through Bore Encoders
     final double WHEEL_DIAMETER = 2.3622; //in inches, 38mm for odometry aluminum omni wheels
-    double COUNTS_PER_INCH = COUNTS_PER_REV / (WHEEL_DIAMETER * 3.1415);
+    double COUNTS_PER_INCH = (COUNTS_PER_REV / (WHEEL_DIAMETER * 3.1415)/2);
 
     final double CPRCollectorWheel = 288;
     final double CollectorWheelDiameter = 5;
@@ -262,12 +262,12 @@ public class RedAutoCases extends LinearOpMode {
 
         if (opModeIsActive()) { // Linear OpMode
             if(startPos == "Rt"){
-                startX=129;
+                startX=258;
             }
             else if(startPos == "Lt"){
-                startX =120;
+                startX =240;
             }
-            globalPositionUpdate = new OdometryGlobalCoordinatePosition(verticalLeft, verticalRight, horizontal, COUNTS_PER_INCH, 75, startX, 8.5, 0.0);
+            globalPositionUpdate = new OdometryGlobalCoordinatePosition(verticalLeft, verticalRight, horizontal, COUNTS_PER_INCH, 75, startX, 17, 0.0);
             Thread positionThread = new Thread(globalPositionUpdate);
             positionThread.start();
 
@@ -291,8 +291,10 @@ public class RedAutoCases extends LinearOpMode {
             }
             //**GO TO BOX INSTRUCTIONS + DELIVER WOBBLE GOAL TO CORRECT BOX**
             if(wobbleGoal>0) {
-                goToBoxDeliverWobble(123, 31, true, 0);
+                goToBoxDeliverWobble(246, 62, true, 0);
             }
+            goToPositionSetZero(240, 120, .7,0,2);
+            goToPositionSetZero(240,24, .7, 0, 2);
             if(wobbleGoal==0){
                 hinge(-1000);
             }
@@ -300,11 +302,12 @@ public class RedAutoCases extends LinearOpMode {
                 launch();
             }
             if(towerGoals||powershots&&(box == "b"||box == "c")){
-                goToPositionSetZero(120, 50, .7,0,2);
+                goToPositionSetZero(240, 100, .7,0,2);
             }
             if(powershots) {
-                goToPositionSetZero(111,66,.7,0,2);
-                goToAngleSetZero(111,66,.7,-16,2);
+
+                goToPositionSetZero(222,132,.7,0,2);
+                goToAngleSetZero(222,132,.7,-16,2);
                 elapsedTime.reset();
                 while (opModeIsActive() && (ringStopperSensor.getDistance(DistanceUnit.CM) < 4.7 && elapsedTime.time() < 2)) {//ring is under distance sensor but deliver it to launcher (while loop ensures that the ring is no longer in the system and is shot)
                     collectorWheel.setPower(-1);
@@ -331,10 +334,10 @@ public class RedAutoCases extends LinearOpMode {
                 launchSetZero(); // stop launchers
             }
             if(wobbleGoal == 2){
-                goToBoxDeliverWobble(76.5, 61, false, 6);//go back to box to deliver second wobble goal (go to position, lift arm higher, ungrip)
+                goToBoxDeliverWobble(153, 122, false, 12);//go back to box to deliver second wobble goal (go to position, lift arm higher, ungrip)
                 sleep(750);// make sure wobble goal is delivered
             }
-            goToPositionSetZero(90,80,.9,0,2);//parking  white
+            goToPositionSetZero(180,160,.9,0,2);//parking  white
 
             String ContentsToWriteToFile = (globalPositionUpdate.returnXCoordinate()/COUNTS_PER_INCH) + " " + (globalPositionUpdate.returnYCoordinate()/COUNTS_PER_INCH) + " " + (globalPositionUpdate.returnOrientation());
             ReadWriteFile.writeFile(TeleOpStartingPos, ContentsToWriteToFile);
@@ -496,67 +499,7 @@ public class RedAutoCases extends LinearOpMode {
             telemetry.update();
         }
     }
-    public void goToAngleDistance(double targetXPosition, double targetYPosition, double robotPower, double desiredRobotOrientation, double allowableAngleError ){
-        targetXPosition *= COUNTS_PER_INCH;
-        targetYPosition *= COUNTS_PER_INCH;
-        double blPower = 0; // motor speed
-        double brPower = 0; // motor speed
-        double flPower = 0; // motor speed
-        double frPower = 0; // motor speed
-        double pivotCorrectionAdj = .05; // constant to scale down pivot correction angle to work with setting powers for mecanum drive motors
-        double distanceToXTarget = targetXPosition - globalPositionUpdate.returnXCoordinate();
-        double distanceToYTarget = targetYPosition - globalPositionUpdate.returnYCoordinate();
-        double distance = Math.hypot(distanceToXTarget, distanceToYTarget);
-        while (opModeIsActive() && distance<2&&desiredRobotOrientation<globalPositionUpdate.returnOrientation()-allowableAngleError) { //correct heading too
-            distance = Math.hypot(distanceToXTarget, distanceToYTarget);
-            distanceToXTarget = targetXPosition - globalPositionUpdate.returnXCoordinate();
-            distanceToYTarget = targetYPosition - globalPositionUpdate.returnYCoordinate();
-            double robotMovementAngle = Math.toDegrees(Math.atan2(distanceToXTarget, distanceToYTarget));
-            double robotMovmentXComponent = calculateX(robotMovementAngle - globalPositionUpdate.returnOrientation(), robotPower);
-            double robotMovmentYComponent = calculateY(robotMovementAngle - globalPositionUpdate.returnOrientation(), robotPower);
-            double pivotCorrection = (desiredRobotOrientation - globalPositionUpdate.returnOrientation())*pivotCorrectionAdj;
-            blPower = robotMovmentYComponent - robotMovmentXComponent + pivotCorrection;
-            flPower = robotMovmentYComponent + robotMovmentXComponent + pivotCorrection;
-            brPower = robotMovmentYComponent + robotMovmentXComponent - pivotCorrection;
-            frPower = robotMovmentYComponent - robotMovmentXComponent - pivotCorrection;
-            //set powers to motors to move
-            double maxMotorPower = Math.max(Math.max(Math.max(Math.abs(flPower), Math.abs(frPower)), Math.abs(blPower)), Math.abs(brPower));
 
-            if (Math.abs(maxMotorPower) > 1) {
-                flPower = (flPower / maxMotorPower)*robotPower;
-                frPower = (frPower / maxMotorPower) *robotPower;
-                blPower = (blPower / maxMotorPower) *robotPower;
-                brPower = (brPower / maxMotorPower)*robotPower;
-            } else if(Math.abs(maxMotorPower) < .03) {
-                flPower = 0;
-                frPower = 0;
-                blPower = 0;
-                brPower = 0;
-            }
-            flMotor.setPower(flPower);
-            frMotor.setPower(frPower);
-            blMotor.setPower(blPower);
-            brMotor.setPower(brPower);
-            telemetry.addData("X Position", globalPositionUpdate.returnXCoordinate() / COUNTS_PER_INCH);
-            telemetry.addData("Y Position", globalPositionUpdate.returnYCoordinate() / COUNTS_PER_INCH);
-            telemetry.addData("Orientation (Degrees)", globalPositionUpdate.returnOrientation());
-            telemetry.addData("XComponent: ", robotMovmentXComponent/.9);
-            telemetry.addData("YComponent: ", robotMovmentYComponent/.9);
-            telemetry.addData("vertical right", globalPositionUpdate.verticalRightEncoderWheelPosition);
-            telemetry.addData("vertical left", globalPositionUpdate.verticalLeftEncoderWheelPosition);
-            telemetry.addData("horizontal", globalPositionUpdate.normalEncoderWheelPosition);
-            telemetry.addData("Pivot Correction: ", pivotCorrection);
-            //telemetry.addData("Limit Switch Status: ", gripSwitch.getState());
-            telemetry.update();
-        }
-    }
-    public void goToAngleDistanceSetZero(double targetXPosition, double targetYPosition, double robotPower, double desiredRobotOrientation, double allowableAngleError ){
-        goToAngleDistance(targetXPosition,  targetYPosition,  robotPower,  desiredRobotOrientation,  allowableAngleError);
-        frMotor.setPower(0);
-        blMotor.setPower(0);
-        flMotor.setPower(0);
-        brMotor.setPower(0);
-    }
     private void initDriveHardwareMap(){
 
         frMotor = hardwareMap.dcMotor.get("frontright");
@@ -715,8 +658,8 @@ public class RedAutoCases extends LinearOpMode {
         collectorWheel.setPower(1);
     }
     public void launch(){
-        launcherL.setVelocity(-1000);
-        launcherR.setVelocity(3000);
+        launcherL.setVelocity(-4250);
+        launcherR.setVelocity(4000);
     }
     public void launchSetZero(){
         launcherL.setVelocity(0);
@@ -724,14 +667,14 @@ public class RedAutoCases extends LinearOpMode {
     }
     public void goToBoxDeliverWobble(double goAroundRingsCoorX, double goAroundRingsCoorY, boolean doHingeArm, int comeback) {
         if (box == "a") {
-            goToPositionSlowDown(115-comeback, 79+comeback, .85, 0, 8);// box a
+            goToPositionSlowDown(230-comeback, 158+comeback, .85, 0, 8);// box a
         }
         else if (box == "b" || box == "c") {
             goToPositionSetZero(goAroundRingsCoorX, goAroundRingsCoorY, .85, 0, 8); // First movement out of starting postition to strafe to the first box
             if (box == "b") {
-                goToPositionSlowDown(94-comeback, 103+comeback, .7, 0, 8);// box b
+                goToPositionSlowDown(188-comeback, 206+comeback, .7, 0, 8);// box b
             } else {//box c
-                goToPositionSlowDown(115-comeback, 127-comeback, .7, 0, 8);
+                goToPositionSlowDown(230-comeback, 254-comeback, .7, 0, 8);
             }
         }
         if (doHingeArm) {
@@ -750,7 +693,7 @@ public class RedAutoCases extends LinearOpMode {
         goToPositionSetZero(targetXPosition,targetYPosition,robotPower-.3,desiredRobotOrientation,1.2);
     }
     public void powershot(double robotAngle){
-        goToAngleSetZero(111,66,.7,robotAngle, 1 );
+        goToAngleSetZero(222,132,.7,robotAngle, 1 );
         conveyRing();
         //goToPositionSetZero(115,65, .6,0,1);//since you are wanting to change the angle of robot, one way to solve issue of robot dancing due to the precision of angles is to move away so then the next loop you will move back and it won't dance
     }
