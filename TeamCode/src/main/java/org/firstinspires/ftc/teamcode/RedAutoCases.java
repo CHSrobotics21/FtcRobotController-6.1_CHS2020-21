@@ -271,7 +271,6 @@ public class RedAutoCases extends LinearOpMode {
         }
         timer.reset();
 
-
         if (opModeIsActive()) { // Linear OpMode
             if(startPos == "Rt"){
                 startX=120;
@@ -290,8 +289,8 @@ public class RedAutoCases extends LinearOpMode {
             // starting postion for linear actuators
             if(powershots)
             {
-                launcherAngle.setPosition(.5);
-                launcherAngleR.setPosition(.5);
+                launcherAngle.setPosition(.4);
+                launcherAngleR.setPosition(.4);
             }
             else if(towerGoals){
                 launcherAngle.setPosition(.36);
@@ -319,9 +318,9 @@ public class RedAutoCases extends LinearOpMode {
                 //goToAngleSetZero(111,66,.7,-16,2);
                 powershot(6);
                 sleep(2000);
-                powershot(5); // second powershot
+                powershot(5.5); // second powershot
                 sleep(2000);
-                powershot(5); // third powershot
+                powershot(4.5); // third powershot
                 sleep(500);
             }
             else if(towerGoals){
@@ -693,7 +692,7 @@ public class RedAutoCases extends LinearOpMode {
             }
             wobbleArmHingeL.setPower(0) ;
             wobbleArmHingeR.setPower(0);
-        }
+        }//
         else {//bring arm back up
             while(opModeIsActive()&&!(brMotor.getCurrentPosition()<-500&&brMotor.getCurrentPosition()>-900)) /*find threshold for when wobble goal arm is not up*/ {
                 wobbleArmHingeL.setPower(1);
