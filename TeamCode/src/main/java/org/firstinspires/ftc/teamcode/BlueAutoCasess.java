@@ -310,7 +310,7 @@ public class BlueAutoCasess extends LinearOpMode {
             if(powershots||towerGoals){
                 launch();
             }
-            if(towerGoals||powershots&&(box == "b"||box == "c")){
+            if(towerGoals||powershots&&(box == "b"||box == "c") && wobbleGoal > 0){
                 goToPositionSetZero(21, 31, .7, 0, 8); // First movement out of starting postition to strafe to the first box
             }
             if(powershots) {
@@ -678,16 +678,20 @@ public class BlueAutoCasess extends LinearOpMode {
         launcherR.setVelocity(0);
     }
     public void goToBoxDeliverWobble(double goAroundRingsCoorX, double goAroundRingsCoorY, boolean doHingeArm, int comeback) {
-        goToPositionSetZero(37, 37.5, .85, 0, 2); // First movement out of starting postition to strafe to the first box
-        goToPositionSetZero(29, 37.5, .7,0,2);
-        if (box == "b") {
-            goToPositionSlowDown(46-comeback, 103+comeback, .7, -85, 8);// box b
+
+        if (box == "a") {
+            goToPositionSlowDown(26+comeback, 79+comeback, .7, -85, 8);// box a
         }
-        else if (box == "a" || box == "c") {
-            if (box == "a") {
-                goToPositionSlowDown(26+comeback, 79+comeback, .7, -85, 8);// box a
+        else if (box == "b" || box == "c") {
+            if (startPos == "Rt") {
+                goToPositionSetZero(37, 37.5, .85, 0, 2); // First movement out of starting postition to strafe to the first box
+                goToPositionSetZero(24, 37.5, .7, 0, 2);
+            }
+            if (box == "b") {
+                goToPositionSlowDown(46 - comeback, 103 + comeback, .7, 0, 8);// box b
+
             } else {//box c
-                goToPositionSlowDown(26-comeback, 127-comeback, .7, -85, 8);
+                goToPositionSlowDown(26 - comeback, 127 - comeback, .7, -85, 8);
             }
         }
         if (doHingeArm) {
