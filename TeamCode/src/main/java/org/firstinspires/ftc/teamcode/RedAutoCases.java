@@ -274,10 +274,10 @@ public class RedAutoCases extends LinearOpMode {
 
         if (opModeIsActive()) { // Linear OpMode
             if(startPos == "Rt"){
-                startX=129;
+                startX=120;
             }
             else if(startPos == "Lt"){
-                startX =120;
+                startX =101;
             }
             globalPositionUpdate = new OdometryGlobalCoordinatePosition(verticalLeft, verticalRight, horizontal, COUNTS_PER_INCH, 75, startX, 8.5, 0.0);
             Thread positionThread = new Thread(globalPositionUpdate);
