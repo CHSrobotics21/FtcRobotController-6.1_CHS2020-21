@@ -290,8 +290,8 @@ public class RedAutoCases extends LinearOpMode {
             // starting postion for linear actuators
             if(powershots)
             {
-                launcherAngle.setPosition(.36);
-                launcherAngleR.setPosition(.36);
+                launcherAngle.setPosition(.5);
+                launcherAngleR.setPosition(.5);
             }
             else if(towerGoals){
                 launcherAngle.setPosition(.36);
@@ -317,16 +317,11 @@ public class RedAutoCases extends LinearOpMode {
             if(powershots) {
                 goToPositionSetZero(112,64,.7,0,2);
                 //goToAngleSetZero(111,66,.7,-16,2);
-                angleRobot(14);
-                elapsedTime.reset();
-                while (opModeIsActive() && (ringStopperSensor.getDistance(DistanceUnit.CM) < 4.7 && elapsedTime.time() < 2)) {//ring is under distance sensor but deliver it to launcher (while loop ensures that the ring is no longer in the system and is shot)
-                    collectorWheel.setPower(-1);
-                }
-                collectorWheel.setPower(0);
+                powershot(6);
                 sleep(2000);
-                powershot(18); // second powershot
+                powershot(5); // second powershot
                 sleep(2000);
-                powershot(23); // third powershot
+                powershot(5); // third powershot
                 sleep(500);
             }
             else if(towerGoals){
@@ -773,8 +768,9 @@ public class RedAutoCases extends LinearOpMode {
         conveyRing();
         //goToPositionSetZero(115,65, .6,0,1);//since you are wanting to change the angle of robot, one way to solve issue of robot dancing due to the precision of angles is to move away so then the next loop you will move back and it won't dance
     }
-    public void angleRobot(double angle){
-        while(opModeIsActive()&&angle>getIntegratedHeading()){
+    public void angleRobot(double angleAdd){
+        double targetAngle = getIntegratedHeading()+angleAdd;
+        while(opModeIsActive()&&targetAngle>getIntegratedHeading()){
             gyroAngles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
             frMotor.setPower(.7);
             flMotor.setPower(-.7);
