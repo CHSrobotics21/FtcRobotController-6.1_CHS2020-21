@@ -256,20 +256,20 @@ public class TeleOpMain extends OpMode {
             isWheelRunning = false;
         }
 //
-        if(timer.time()>2&&timer.time()<2.05){
-            rings++;
-            collectorWheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-            collectorWheel.setPower(0);
-        }
-        topPrevious = topCurrent;
-        topCurrent = ringStopperSensor.getDistance(DistanceUnit.CM)<4.6&&ringStopperSensor.getDistance(DistanceUnit.CM)>0;
-        if (topPrevious && !topCurrent){
-            rings--;
-        }
-        if (ringStopperSensor.getDistance(DistanceUnit.CM)<4.6&&ringStopperSensor.getDistance(DistanceUnit.CM)>0 && islaunchRunning){
-            moveCollectorWheel();
-            isWheelRunning = false;
-        }
+//        if(timer.time()>2&&timer.time()<2.05){
+//            rings++;
+//            collectorWheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+//            collectorWheel.setPower(0);
+//        }
+//        topPrevious = topCurrent;
+//        topCurrent = ringStopperSensor.getDistance(DistanceUnit.CM)<4.6&&ringStopperSensor.getDistance(DistanceUnit.CM)>0;
+//        if (topPrevious && !topCurrent){
+//            rings--;
+//        }
+//        if (ringStopperSensor.getDistance(DistanceUnit.CM)<4.6&&ringStopperSensor.getDistance(DistanceUnit.CM)>0 && islaunchRunning){
+//            moveCollectorWheel();
+//            isWheelRunning = false;
+//        }
 //        else if(gamepad2.left_trigger>.05){
 //            isWheelRunning = true;
 //            collectorwheelthread.moveCollectorWheel(8, false);
