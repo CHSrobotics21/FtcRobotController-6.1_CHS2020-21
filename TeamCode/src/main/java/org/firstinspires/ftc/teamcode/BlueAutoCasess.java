@@ -29,6 +29,7 @@
 
 package org.firstinspires.ftc.teamcode;
 
+import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.CRServo;
@@ -43,7 +44,11 @@ import com.qualcomm.robotcore.util.ReadWriteFile;
 
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
 import org.firstinspires.ftc.robotcore.external.tfod.TFObjectDetector;
@@ -80,6 +85,12 @@ public class BlueAutoCasess extends LinearOpMode {
     final double CollectorWheelDiameter = 5;
     double CPICollectorWheel = CPRCollectorWheel/(CollectorWheelDiameter*3.1415);
     double launchPower = 0.0;
+
+    BNO055IMU imu;
+    int rotations = 0;
+    BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
+    double desiredHeading = 0.0;
+    Orientation gyroAngles;
 
     List<Recognition> updatedRecognitions;
     DcMotor frMotor, flMotor, brMotor, blMotor, collectorWheel, collector;
@@ -278,8 +289,8 @@ public class BlueAutoCasess extends LinearOpMode {
             // starting postion for linear actuators
             if(powershots)
             {
-                launcherAngle.setPosition(.336);
-                launcherAngleR.setPosition(.336);
+                launcherAngle.setPosition(.36);
+                launcherAngleR.setPosition(.36);
             }
             else if(towerGoals){
                 launcherAngle.setPosition(.36);
@@ -560,6 +571,7 @@ public class BlueAutoCasess extends LinearOpMode {
 
         flMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         blMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        gyroAngles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
         //brMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 
         //brMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -694,9 +706,22 @@ public class BlueAutoCasess extends LinearOpMode {
         goToPositionSetZero(targetXPosition,targetYPosition,robotPower-.3,desiredRobotOrientation,1.2);
     }
     public void powershot(double robotAngle){
-        goToAngleSetZero(54,66,.7,robotAngle, 1 );
+//        goToAngleSetZero(111,66,.7,robotAngle, 1 );
+        angleRobot(robotAngle);
         conveyRing();
         //goToPositionSetZero(115,65, .6,0,1);//since you are wanting to change the angle of robot, one way to solve issue of robot dancing due to the precision of angles is to move away so then the next loop you will move back and it won't dance
+    }
+    public void angleRobot(double angle){
+        while(opModeIsActive()&&angle>getIntegratedHeading()){
+            gyroAngles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
+            frMotor.setPower(.7);
+            flMotor.setPower(-.7);
+            telemetry.addData("IMU angle", getIntegratedHeading());
+            telemetry.update();
+        }
+        frMotor.setPower(0);
+        flMotor.setPower(0);
+
     }
     public void conveyRing(){
         elapsedTime.reset();
@@ -710,5 +735,16 @@ public class BlueAutoCasess extends LinearOpMode {
             collectorWheel.setPower(-1);
         }
         collectorWheel.setPower(0);
+    }
+    public double getIntegratedHeading() {
+        if(desiredHeading - (rotations * 360 + gyroAngles.firstAngle) > 200) {
+            rotations++;
+        }
+        else if(desiredHeading - (rotations * 360 + gyroAngles.firstAngle) < -200) {
+            rotations--;
+        }
+
+        desiredHeading = rotations * 360 + gyroAngles.firstAngle;
+        return desiredHeading;
     }
 }

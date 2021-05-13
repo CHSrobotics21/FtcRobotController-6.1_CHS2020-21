@@ -135,6 +135,7 @@ public class TeleOpMain extends OpMode {
         collector = hardwareMap.dcMotor.get("collector");
 
         ringStopperSensor = hardwareMap.get(DistanceSensor.class,"ringStopperSensor");
+        distanceColor = hardwareMap.get(ColorSensor.class, "ringStopperSensor");
 
         launcherR = hardwareMap.get(DcMotorEx.class,"launcherR");
         launcherL = hardwareMap.get(DcMotorEx.class,"launcherL");
@@ -197,6 +198,11 @@ public class TeleOpMain extends OpMode {
     public void init_loop() {
         gyroAngles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
         telemetry.addData("1", "Integrated Heading: " + getIntegratedHeading());
+        telemetry.addData("ring sensor data: ", ringStopperSensor.getDistance(DistanceUnit.CM));
+        telemetry.addData("ring sensor ALPHA: ", distanceColor.alpha());
+        telemetry.addData("ring sensor RED: ", distanceColor.red());
+        telemetry.addData("ring sensor BLUE: ", distanceColor.blue());
+        telemetry.addData("ring sensor GREEN: ", distanceColor.green());
 //        telemetry.addData("2", "heading: " + globalPositionUpdate.returnOrientation());
 //        telemetry.addData("StartingPostionX", globalPositionUpdate.returnXCoordinate()/COUNTS_PER_INCH);
 //        telemetry.addData("StartingPostionY", globalPositionUpdate.returnYCoordinate()/COUNTS_PER_INCH);
@@ -825,7 +831,7 @@ public class TeleOpMain extends OpMode {
     }
     public void launch(){
         launcherL.setVelocity(-1000);
-        launcherR.setVelocity(3000);//accurate; too strong
+        launcherR.setVelocity(3000);//4250 accurate; too strong
         islaunchRunning = true;
     }
     public void launchSetZero(){

@@ -290,8 +290,8 @@ public class RedAutoCases extends LinearOpMode {
             // starting postion for linear actuators
             if(powershots)
             {
-                launcherAngle.setPosition(.336);
-                launcherAngleR.setPosition(.336);
+                launcherAngle.setPosition(.36);
+                launcherAngleR.setPosition(.36);
             }
             else if(towerGoals){
                 launcherAngle.setPosition(.36);
@@ -315,17 +315,18 @@ public class RedAutoCases extends LinearOpMode {
                 goToPositionSetZero(120, 50, .7,0,2);
             }
             if(powershots) {
-                goToPositionSetZero(111,66,.7,0,2);
-                goToAngleSetZero(111,66,.7,-16,2);
+                goToPositionSetZero(112,64,.7,0,2);
+                //goToAngleSetZero(111,66,.7,-16,2);
+                angleRobot(14);
                 elapsedTime.reset();
                 while (opModeIsActive() && (ringStopperSensor.getDistance(DistanceUnit.CM) < 4.7 && elapsedTime.time() < 2)) {//ring is under distance sensor but deliver it to launcher (while loop ensures that the ring is no longer in the system and is shot)
                     collectorWheel.setPower(-1);
                 }
                 collectorWheel.setPower(0);
                 sleep(2000);
-                powershot(-20.5); // second powershot
+                powershot(18); // second powershot
                 sleep(2000);
-                powershot(-25); // third powershot
+                powershot(23); // third powershot
                 sleep(500);
             }
             else if(towerGoals){
@@ -572,6 +573,9 @@ public class RedAutoCases extends LinearOpMode {
     }
     private void initDriveHardwareMap(){
 
+        parameters.angleUnit = BNO055IMU.AngleUnit.DEGREES;
+        imu = hardwareMap.get(BNO055IMU.class, "imu");
+        imu.initialize(parameters);
         frMotor = hardwareMap.dcMotor.get("frontright");
         flMotor = hardwareMap.dcMotor.get("frontleft");
         brMotor = hardwareMap.dcMotor.get("backright");
@@ -738,7 +742,7 @@ public class RedAutoCases extends LinearOpMode {
     }
     public void goToBoxDeliverWobble(double goAroundRingsCoorX, double goAroundRingsCoorY, boolean doHingeArm, int comeback) {
         if (box == "a") {
-            goToPositionSlowDown(115-comeback, 79+comeback, .85, 0, 8);// box a
+            goToPositionSlowDown(125-comeback, 79+comeback, .85, 0, 8);// box a
         }
         else if (box == "b" || box == "c") {
             goToPositionSetZero(goAroundRingsCoorX, goAroundRingsCoorY, .85, 0, 8); // First movement out of starting postition to strafe to the first box
@@ -765,7 +769,7 @@ public class RedAutoCases extends LinearOpMode {
     }
     public void powershot(double robotAngle){
 //        goToAngleSetZero(111,66,.7,robotAngle, 1 );
-        angleRobot(17);
+        angleRobot(robotAngle);
         conveyRing();
         //goToPositionSetZero(115,65, .6,0,1);//since you are wanting to change the angle of robot, one way to solve issue of robot dancing due to the precision of angles is to move away so then the next loop you will move back and it won't dance
     }
