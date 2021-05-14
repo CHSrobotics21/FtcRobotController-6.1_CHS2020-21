@@ -106,7 +106,7 @@ public class RedAutoCases extends LinearOpMode {
     boolean towerGoals = false, powershots = false, selectionButtonPressed = false, buttonPressed = false;
 
     File TeleOpStartingPos = AppUtil.getInstance().getSettingsFile("TeleOpStartingPos.txt");
-    File WobbleEncoder = AppUtil.getInstance().getSettingsFile("WobbleEncoder.txt");
+    File RingSensorData = AppUtil.getInstance().getSettingsFile("WobbleEncoder.txt");
     OdometryGlobalCoordinatePosition globalPositionUpdate;
 
 
@@ -273,7 +273,7 @@ public class RedAutoCases extends LinearOpMode {
 
         if (opModeIsActive()) { // Linear OpMode
             if(startPos == "Rt"){
-                startX=120;
+                startX=111;
             }
             else if(startPos == "Lt"){
                 startX =101;
@@ -314,12 +314,20 @@ public class RedAutoCases extends LinearOpMode {
                 goToPositionSetZero(120, 50, .7,0,2);
             }
             if(powershots) {
-                goToPositionSetZero(112,64,.7,0,2);
+                goToPositionSetZero(108,64,.7,0,2);
                 //goToAngleSetZero(111,66,.7,-16,2);
-                powershot(6);
+                ringFileContents+="FIRST POSITION: ";
+                angleRobot(5);
+                elapsedTime.reset();
+                while (opModeIsActive() && (ringStopperSensor.getDistance(DistanceUnit.CM) < 4.7 && elapsedTime.time() < 2)) {//ring is under distance sensor but deliver it to launcher (while loop ensures that the ring is no longer in the system and is shot)
+                    collectorWheel.setPower(-1);
+                }
+                collectorWheel.setPower(0);
                 sleep(2000);
+                ringFileContents+="SECOND POSITION: ";
                 powershot(5.5); // second powershot
                 sleep(2000);
+                ringFileContents+="THIRD POSITION: ";
                 powershot(4.5); // third powershot
                 sleep(500);
             }
@@ -346,7 +354,7 @@ public class RedAutoCases extends LinearOpMode {
             String ContentsToWriteToFile = (globalPositionUpdate.returnXCoordinate()/COUNTS_PER_INCH) + " " + (globalPositionUpdate.returnYCoordinate()/COUNTS_PER_INCH) + " " + (globalPositionUpdate.returnOrientation());
             ReadWriteFile.writeFile(TeleOpStartingPos, ContentsToWriteToFile);
             ringFileContents = brMotor.getCurrentPosition() +"";
-            ReadWriteFile.writeFile(WobbleEncoder, ringFileContents);
+            ReadWriteFile.writeFile(RingSensorData, ringFileContents);
             //goToPositionSlowDown(111, 24, .6, 0, 2); // go back to starting position for programmers testing ease :)
         }
         if (tfod != null) { //stop button
@@ -736,7 +744,7 @@ public class RedAutoCases extends LinearOpMode {
     }
     public void goToBoxDeliverWobble(double goAroundRingsCoorX, double goAroundRingsCoorY, boolean doHingeArm, int comeback) {
         if (box == "a") {
-            goToPositionSlowDown(125-comeback, 79+comeback, .85, 0, 8);// box a
+            goToPositionSlowDown(117    -comeback, 79+comeback, .85, 0, 8);// box a
         }
         else if (box == "b" || box == "c") {
             goToPositionSetZero(goAroundRingsCoorX, goAroundRingsCoorY, .85, 0, 8); // First movement out of starting postition to strafe to the first box
@@ -790,6 +798,8 @@ public class RedAutoCases extends LinearOpMode {
         elapsedTime.reset();
         while (opModeIsActive() && (ringStopperSensor.getDistance(DistanceUnit.CM) < 4.7 && elapsedTime.time() < 2)) {//ring is under distance sensor but deliver it to launcher (while loop ensures that the ring is no longer in the system and is shot)
             collectorWheel.setPower(-1);
+            ringFileContents+="ring sensor data under sensor : "+ ringStopperSensor.getDistance(DistanceUnit.CM)+" cm"+ " \n";
+
         }
         collectorWheel.setPower(0);
     }

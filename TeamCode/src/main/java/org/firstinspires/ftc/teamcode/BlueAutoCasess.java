@@ -290,12 +290,12 @@ public class BlueAutoCasess extends LinearOpMode {
             // starting postion for linear actuators
             if(powershots)
             {
-                launcherAngle.setPosition(.5);
-                launcherAngleR.setPosition(.5);
+                launcherAngle.setPosition(.4);
+                launcherAngleR.setPosition(.4);
             }
             else if(towerGoals){
-                launcherAngle.setPosition(.36);
-                launcherAngleR.setPosition(.36);
+                launcherAngle.setPosition(.43);
+                launcherAngleR.setPosition(.43);
             }
             while (opModeIsActive() && timer.seconds() < startingDelay) {
                 telemetry.addData("Waiting", startingDelay - timer.seconds());
@@ -311,22 +311,22 @@ public class BlueAutoCasess extends LinearOpMode {
             if(powershots||towerGoals){
                 launch();
             }
-            if(towerGoals||powershots&&(box == "b"||box == "c") && wobbleGoal > 0){
+            if(towerGoals||powershots&&(box == "b"||box == "c") && wobbleGoal == 0){
                 goToPositionSetZero(21, 31, .7, 0, 8); // First movement out of starting postition to strafe to the first box
             }
             if(powershots) {
-                goToPositionSetZero(112,64,.7,0,2);
+                goToPositionSetZero(32,64,.7,0,2);
                 //goToAngleSetZero(111,66,.7,-16,2);
-                powershot(6);
+                powershot(1);
                 sleep(2000);
-                powershot(5); // second powershot
+                powershot(-5); // second powershot
                 sleep(2000);
-                powershot(5); // third powershot
+                powershot(-5); // third powershot
                 sleep(500);
             }
             else if(towerGoals){
-                goToPositionSetZero(34,57,.7,0,2);
-                goToAngleSetZero(34, 57, .7, 0, 2);
+                goToPositionSetZero(32,57,.7,0,2);
+                //angleRobot(-4);
                 sleep(500);
                 conveyRing();
                 sleep(1500);
@@ -344,7 +344,7 @@ public class BlueAutoCasess extends LinearOpMode {
                 sleep(750);// make sure wobble goal is delivered
             }
 
-            goToPositionSetZero(22,80,.9,0,2);//parking  white
+            goToPositionSetZero(29,80,.9,0,2);//parking  white
 
             String ContentsToWriteToFile = (globalPositionUpdate.returnXCoordinate()/COUNTS_PER_INCH) + " " + (globalPositionUpdate.returnYCoordinate()/COUNTS_PER_INCH) + " " + (globalPositionUpdate.returnOrientation());
             ReadWriteFile.writeFile(TeleOpStartingPos, ContentsToWriteToFile);
@@ -509,6 +509,9 @@ public class BlueAutoCasess extends LinearOpMode {
 
     private void initDriveHardwareMap(){
 
+        parameters.angleUnit = BNO055IMU.AngleUnit.DEGREES;
+        imu = hardwareMap.get(BNO055IMU.class, "imu");
+        imu.initialize(parameters);
         frMotor = hardwareMap.dcMotor.get("frontright");
         flMotor = hardwareMap.dcMotor.get("frontleft");
         brMotor = hardwareMap.dcMotor.get("backright");
@@ -680,11 +683,11 @@ public class BlueAutoCasess extends LinearOpMode {
         }
         else if (box == "b" || box == "c") {
             if (startPos == "Rt") {
-                goToPositionSetZero(37, 37.5, .85, 0, 2); // First movement out of starting postition to strafe to the first box
+                //goToPositionSetZero(37, 37.5, .85, 0, 2); // First movement out of starting postition to strafe to the first box
                 goToPositionSetZero(24, 37.5, .7, 0, 2);
             }
             if (box == "b") {
-                goToPositionSlowDown(46 - comeback, 103 + comeback, .7, 0, 8);// box b
+                goToPositionSlowDown(20 - comeback, 103 + comeback, .7, 0, 8);// box b
 
             } else {//box c
                 goToPositionSlowDown(26 - comeback, 127 - comeback, .7, -85, 8);
@@ -713,12 +716,24 @@ public class BlueAutoCasess extends LinearOpMode {
     }
     public void angleRobot(double angleAdd){
         double targetAngle = getIntegratedHeading()+angleAdd;
-        while(opModeIsActive()&&targetAngle>getIntegratedHeading()){
-            gyroAngles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
-            frMotor.setPower(.7);
-            flMotor.setPower(-.7);
-            telemetry.addData("IMU angle", getIntegratedHeading());
-            telemetry.update();
+        boolean isPos = targetAngle>0;
+        if(isPos){
+            while(opModeIsActive()&&targetAngle > getIntegratedHeading()){
+                gyroAngles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
+                frMotor.setPower(.6);
+                flMotor.setPower(-.6);
+                telemetry.addData("IMU angle", getIntegratedHeading());
+                telemetry.update();
+            }
+        }
+        else {
+            while (opModeIsActive() && targetAngle < getIntegratedHeading()) {
+                gyroAngles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
+                frMotor.setPower(-.7);
+                flMotor.setPower(.7);
+                telemetry.addData("IMU angle", getIntegratedHeading());
+                telemetry.update();
+            }
         }
         frMotor.setPower(0);
         flMotor.setPower(0);
