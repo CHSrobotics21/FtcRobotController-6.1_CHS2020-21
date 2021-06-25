@@ -205,7 +205,7 @@ public class RedAutoCases extends LinearOpMode {
                             if(gamepad1.x) {startPos = "Lt";}//starting position will be on the left (only label not assigning values yet)
 
                             telemetry.addData("> Set Start Position", "Current Value: " + startPos);
-                            telemetry.addData("B Button = Right", "X Button = Left");
+                            telemetry.addData("B Button = rt", "X Button = Firewires ");
                             break;
 
                         case 1:  //Powershot selection
@@ -293,8 +293,8 @@ public class RedAutoCases extends LinearOpMode {
                 launcherAngleR.setPosition(.4);
             }
             else if(towerGoals){
-                launcherAngle.setPosition(.36);
-                launcherAngleR.setPosition(.36);
+                launcherAngle.setPosition(.43);
+                launcherAngleR.setPosition(.43);
             }
             while (opModeIsActive() && timer.seconds() < startingDelay) {
                 telemetry.addData("Waiting", startingDelay - timer.seconds());
@@ -302,7 +302,7 @@ public class RedAutoCases extends LinearOpMode {
             }
             //**GO TO BOX INSTRUCTIONS + DELIVER WOBBLE GOAL TO CORRECT BOX**
             if(wobbleGoal>0) {
-                goToBoxDeliverWobble(123, 31, true, 0);
+                goToBoxDeliverWobble(97, 40, true, 0);
             }
             if(wobbleGoal==0){
                 hinge(-1000);
@@ -744,12 +744,12 @@ public class RedAutoCases extends LinearOpMode {
     }
     public void goToBoxDeliverWobble(double goAroundRingsCoorX, double goAroundRingsCoorY, boolean doHingeArm, int comeback) {
         if (box == "a") {
-            goToPositionSlowDown(117    -comeback, 79+comeback, .85, 0, 8);// box a
+            goToPositionSlowDown(115-comeback, 79+comeback, .85, 0, 8);// box a
         }
         else if (box == "b" || box == "c") {
             goToPositionSetZero(goAroundRingsCoorX, goAroundRingsCoorY, .85, 0, 8); // First movement out of starting postition to strafe to the first box
             if (box == "b") {
-                goToPositionSlowDown(94-comeback, 103+comeback, .7, 0, 8);// box b
+                goToPositionSlowDown(90-comeback, 103+comeback, .7, 0, 8);// box b
             } else {//box c
                 goToPositionSlowDown(115-comeback, 127-comeback, .7, 0, 8);
             }
@@ -813,5 +813,7 @@ public class RedAutoCases extends LinearOpMode {
 
         desiredHeading = rotations * 360 + gyroAngles.firstAngle;
         return desiredHeading;
+
+
     }
 }

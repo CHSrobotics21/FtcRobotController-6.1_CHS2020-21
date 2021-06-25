@@ -838,6 +838,7 @@ public class TeleOpMain extends OpMode {
         launcherL.setVelocity(0);
         launcherR.setVelocity(0);
         islaunchRunning = false;
+        islaunchRunning = false;
     }
      public void moveCollectorWheel()
      { //place after go to position statements to shoot at power sh

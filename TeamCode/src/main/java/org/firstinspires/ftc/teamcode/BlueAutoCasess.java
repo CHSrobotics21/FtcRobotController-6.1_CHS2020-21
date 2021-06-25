@@ -205,7 +205,7 @@ public class BlueAutoCasess extends LinearOpMode {
                             if(gamepad1.x) {startPos = "Lt";}//starting position will be on the left (only label not assigning values yet)
 
                             telemetry.addData("> Set Start Position", "Current Value: " + startPos);
-                            telemetry.addData("B Button = Right", "X Button = Left");
+                            telemetry.addData("B Button = Right", "X Button = NEED MORE ZIPTIES");
                             break;
 
                         case 1:  //Powershot selection
@@ -264,6 +264,7 @@ public class BlueAutoCasess extends LinearOpMode {
                     telemetry.addData("2)  Powershot", powershots);
                     telemetry.addData("3)  Tower Goal", towerGoals);
                     telemetry.addData("4)  Program Delay", startingDelay);
+                    telemetry.addData("5)  # of Wobbles ", wobbleGoal);
                     gyroAngles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
                     telemetry.update();
                 }
@@ -277,7 +278,7 @@ public class BlueAutoCasess extends LinearOpMode {
                 startX=37;
             }
             else if(startPos == "Lt"){
-                startX =18;
+                startX =24;
             }
             globalPositionUpdate = new OdometryGlobalCoordinatePosition(verticalLeft, verticalRight, horizontal, COUNTS_PER_INCH, 75, startX, 8.5, 0.0);
             Thread positionThread = new Thread(globalPositionUpdate);
@@ -317,7 +318,7 @@ public class BlueAutoCasess extends LinearOpMode {
             if(powershots) {
                 goToPositionSetZero(32,64,.7,0,2);
                 //goToAngleSetZero(111,66,.7,-16,2);
-                powershot(1);
+                powershot(-5);
                 sleep(2000);
                 powershot(-5); // second powershot
                 sleep(2000);
@@ -325,7 +326,7 @@ public class BlueAutoCasess extends LinearOpMode {
                 sleep(500);
             }
             else if(towerGoals){
-                goToPositionSetZero(32,57,.7,0,2);
+                goToPositionSetZero(32,57,.7,-3,2);
                 //angleRobot(-4);
                 sleep(500);
                 conveyRing();
@@ -344,7 +345,7 @@ public class BlueAutoCasess extends LinearOpMode {
                 sleep(750);// make sure wobble goal is delivered
             }
 
-            goToPositionSetZero(29,80,.9,0,2);//parking  white
+            goToPositionSetZero(30,80,.9,0,2);//parking  white
 
             String ContentsToWriteToFile = (globalPositionUpdate.returnXCoordinate()/COUNTS_PER_INCH) + " " + (globalPositionUpdate.returnYCoordinate()/COUNTS_PER_INCH) + " " + (globalPositionUpdate.returnOrientation());
             ReadWriteFile.writeFile(TeleOpStartingPos, ContentsToWriteToFile);
