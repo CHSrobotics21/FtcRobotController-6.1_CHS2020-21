@@ -33,7 +33,6 @@ import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
@@ -130,6 +129,7 @@ public class Rover extends LinearOpMode {
                     for (Recognition recognition : updatedRecognitions) {
                         objectAngle = -recognition.estimateAngleToObject(AngleUnit.DEGREES);
                         telemetry.addData("angle " + recognition.getLabel(), objectAngle);
+                        telemetry.addData("object height :", recognition.getHeight());
 
                     }
                     //rectangle frame is two objects grouped so move robot to read different
@@ -144,66 +144,68 @@ public class Rover extends LinearOpMode {
         if (tfod != null) {
             tfod.shutdown();
         }
-        while(opModeIsActive()) {
-            desiredHeading = getIntegratedHeading();
-            gyroAngles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
-            driveRotation = (desiredHeading - getIntegratedHeading()) / (Math.abs(desiredHeading - getIntegratedHeading())) * .05;
-            if (robotPerspective) { //Controls are mapped to the robot perspective
-                fieldReference = 0;
-                //Positive values for x axis are joystick right
-                //Positive values for y axis are joystick down
-                y = Range.clip(-gamepad1.right_stick_y,-1,1);
-                x = Range.clip(-gamepad1.right_stick_x,-1,1);
-                joystickAngle = Math.atan2(x,y);
-            } else {   //Controls are mapped to the field
-                fieldReference = desiredHeading;
-                //Positive values for x axis are joystick right
-                //Positive values for y axis are joystick down
-                y = Range.clip(gamepad1.right_stick_x,-1,1);
-                x = Range.clip(-gamepad1.right_stick_y,-1,1);
-                joystickAngle = Math.atan2(x,y);
-                // joystickAngle360 = joystickAngle >= 0 ? joystickAngle : (2*Math.PI) + joystickAngle;
-            }
-            joystickAngle360 = joystickAngle >= 0 ? joystickAngle : (2*Math.PI) + joystickAngle;
-            driveSpeed = Range.clip(Math.sqrt(y * y + x * x), -1, 1);
+        if(opModeIsActive()) {
+            angleRobot(objectAngle);
 
-            flPower = Math.cos(Math.toRadians(joystickAngle360 - desiredHeading) + Math.PI / 4);
-            frPower = Math.sin(Math.toRadians(joystickAngle360 - desiredHeading) + Math.PI / 4);
-            blPower = Math.sin(Math.toRadians(joystickAngle360 - desiredHeading) + Math.PI / 4);
-            brPower = Math.cos(Math.toRadians(joystickAngle360 - desiredHeading) + Math.PI / 4);
-
-            maxMotorPower = Math.max(Math.max(Math.max(Math.abs(flPower), Math.abs(frPower)), Math.abs(blPower)), Math.abs(brPower));
-
-            //Ratio the powers for direction
-            flPower = flPower / maxMotorPower;
-            frPower = frPower / maxMotorPower;
-            blPower = blPower / maxMotorPower;
-            brPower = brPower / maxMotorPower;
-
-            flPower = driveSpeed * flPower - driveRotation;
-            frPower = driveSpeed * frPower + driveRotation;
-            blPower = driveSpeed * blPower - driveRotation;
-            brPower = driveSpeed * brPower + driveRotation;
-
-            maxMotorPower = Math.max(Math.max(Math.max(Math.abs(flPower), Math.abs(frPower)), Math.abs(blPower)), Math.abs(brPower));
-
-
-            if (Math.abs(maxMotorPower) > 1) {
-                flPower = flPower / maxMotorPower;
-                frPower = frPower / maxMotorPower;
-                blPower = blPower / maxMotorPower;
-                brPower = brPower / maxMotorPower;
-           } //else if (Math.abs(maxMotorPower) < .03) {
-//                flPower = 0;
-//                frPower = 0;
-//                blPower = 0;
-//                brPower = 0;
+//            desiredHeading = getIntegratedHeading();
+//            gyroAngles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
+//            driveRotation = (desiredHeading - getIntegratedHeading()) / (Math.abs(desiredHeading - getIntegratedHeading())) * .05;
+//            if (robotPerspective) { //Controls are mapped to the robot perspective
+//                fieldReference = 0;
+//                //Positive values for x axis are joystick right
+//                //Positive values for y axis are joystick down
+//                y = Range.clip(-gamepad1.right_stick_y,-1,1);
+//                x = Range.clip(-gamepad1.right_stick_x,-1,1);
+//                joystickAngle = Math.atan2(x,y);
+//            } else {   //Controls are mapped to the field
+//                fieldReference = desiredHeading;
+//                //Positive values for x axis are joystick right
+//                //Positive values for y axis are joystick down
+//                y = Range.clip(gamepad1.right_stick_x,-1,1);
+//                x = Range.clip(-gamepad1.right_stick_y,-1,1);
+//                joystickAngle = Math.atan2(x,y);
+//                // joystickAngle360 = joystickAngle >= 0 ? joystickAngle : (2*Math.PI) + joystickAngle;
 //            }
-
-            flMotor.setPower(flPower);
-            frMotor.setPower(frPower);
-            blMotor.setPower(blPower);
-            brMotor.setPower(brPower);
+//            joystickAngle360 = joystickAngle >= 0 ? joystickAngle : (2*Math.PI) + joystickAngle;
+//            driveSpeed = Range.clip(Math.sqrt(y * y + x * x), -1, 1);
+//
+//            flPower = Math.cos(Math.toRadians(joystickAngle360 - desiredHeading) + Math.PI / 4);
+//            frPower = Math.sin(Math.toRadians(joystickAngle360 - desiredHeading) + Math.PI / 4);
+//            blPower = Math.sin(Math.toRadians(joystickAngle360 - desiredHeading) + Math.PI / 4);
+//            brPower = Math.cos(Math.toRadians(joystickAngle360 - desiredHeading) + Math.PI / 4);
+//
+//            maxMotorPower = Math.max(Math.max(Math.max(Math.abs(flPower), Math.abs(frPower)), Math.abs(blPower)), Math.abs(brPower));
+//
+//            //Ratio the powers for direction
+//            flPower = flPower / maxMotorPower;
+//            frPower = frPower / maxMotorPower;
+//            blPower = blPower / maxMotorPower;
+//            brPower = brPower / maxMotorPower;
+//
+//            flPower = driveSpeed * flPower - driveRotation;
+//            frPower = driveSpeed * frPower + driveRotation;
+//            blPower = driveSpeed * blPower - driveRotation;
+//            brPower = driveSpeed * brPower + driveRotation;
+//
+//            maxMotorPower = Math.max(Math.max(Math.max(Math.abs(flPower), Math.abs(frPower)), Math.abs(blPower)), Math.abs(brPower));
+//
+//
+//            if (Math.abs(maxMotorPower) > 1) {
+//                flPower = flPower / maxMotorPower;
+//                frPower = frPower / maxMotorPower;
+//                blPower = blPower / maxMotorPower;
+//                brPower = brPower / maxMotorPower;
+//           } //else if (Math.abs(maxMotorPower) < .03) {
+////                flPower = 0;
+////                frPower = 0;
+////                blPower = 0;
+////                brPower = 0;
+////            }
+//
+//            flMotor.setPower(flPower);
+//            frMotor.setPower(frPower);
+//            blMotor.setPower(blPower);
+//            brMotor.setPower(brPower);
         }
     }
 
@@ -235,7 +237,36 @@ public class Rover extends LinearOpMode {
         tfod = ClassFactory.getInstance().createTFObjectDetector(tfodParameters, vuforia);
         tfod.loadModelFromAsset(TFOD_MODEL_ASSET, LABEL_GOLD_MINERAL, LABEL_SILVER_MINERAL);
     }
-    private double getIntegratedHeading() {
+    public void angleRobot(double angleOfObject){
+        //double targetAngle = getIntegratedHeading()+angleAdd;
+//        boolean isNeg = false;
+//        if(angleOfObject<0)
+//        {
+//            angleOfObject = Math.abs(angleOfObject);
+//            isNeg = true;
+//        }
+        while(opModeIsActive()&&angleOfObject > getRoboAngle()){
+            gyroAngles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
+            brMotor.setPower(-.7);
+            blMotor.setPower(.7);
+//            if(isNeg){
+//                frMotor.setPower(-.7);
+//                flMotor.setPower(.7);
+//            }
+//            else
+//            {
+//                frMotor.setPower(.7);
+//                flMotor.setPower(-.7);
+//            }
+
+            telemetry.addData("IMU angle", getRoboAngle());
+            telemetry.update();
+        }
+        frMotor.setPower(0);
+        flMotor.setPower(0);
+
+    }
+    private double getRoboAngle() {
         if(desiredHeading - (rotations * 360 + gyroAngles.firstAngle) > 200) {
             rotations++;
         }
