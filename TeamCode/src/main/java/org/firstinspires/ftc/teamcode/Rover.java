@@ -33,6 +33,7 @@ import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
@@ -64,12 +65,14 @@ public class Rover extends LinearOpMode {
     private static final String LABEL_SILVER_MINERAL = "Silver Mineral";
     double flPower, frPower, blPower, brPower;
     DcMotor flMotor, frMotor, brMotor, blMotor;
-    double desiredHeading, maxMotorPower;
+    double desiredHeading, maxMotorPower, objectHeight;
     BNO055IMU imu;
     Orientation gyroAngles;
     boolean robotPerspective = false;
     double fieldReference, y, x, joystickAngle, joystickAngle360, driveSpeed, driveRotation, objectAngle;
     int rotations;
+    List<Recognition> updatedRecognitions;
+    final double ONE_FT_HEIGHT = 130;
 
     /*
      * IMPORTANT: You need to obtain your own license key to use Vuforia. The string below with which
@@ -118,18 +121,22 @@ public class Rover extends LinearOpMode {
         imu = hardwareMap.get(BNO055IMU.class, "imu");
         imu.initialize(parameters);
 
+        flMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        blMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+
 
         while (!isStarted()&& !isStopRequested()) {
             if (tfod != null) {
                 // getUpdatedRecognitions() will return null if no new information is available since
                 // the last time that call was made.
-                List<Recognition> updatedRecognitions = tfod.getUpdatedRecognitions();
+                updatedRecognitions = tfod.getUpdatedRecognitions();
                 if (updatedRecognitions != null) {
                     telemetry.addData("# Object Detected", updatedRecognitions.size());
                     for (Recognition recognition : updatedRecognitions) {
                         objectAngle = -recognition.estimateAngleToObject(AngleUnit.DEGREES);
                         telemetry.addData("angle " + recognition.getLabel(), objectAngle);
                         telemetry.addData("object height :", recognition.getHeight());
+                        //telemetry.addData("imu angle: ", getRoboAngle());
 
                     }
                     //rectangle frame is two objects grouped so move robot to read different
@@ -238,26 +245,33 @@ public class Rover extends LinearOpMode {
         tfod.loadModelFromAsset(TFOD_MODEL_ASSET, LABEL_GOLD_MINERAL, LABEL_SILVER_MINERAL);
     }
     public void angleRobot(double angleOfObject){
-        //double targetAngle = getIntegratedHeading()+angleAdd;
-//        boolean isNeg = false;
-//        if(angleOfObject<0)
-//        {
-//            angleOfObject = Math.abs(angleOfObject);
-//            isNeg = true;
-//        }
-        while(opModeIsActive()&&angleOfObject > getRoboAngle()){
+        // angle/50 to slow down while reaching angle
+        //take object angle from init and plug into imu in running loop.
+
+        //one foot away 130 height, subtract current height
+        double speed = 0;
+        boolean isNeg = false;
+        if(angleOfObject<0)
+        {
+            isNeg = true;
+        }
+        while(opModeIsActive()&&!(angleOfObject > getRoboAngle()-2 && angleOfObject < getRoboAngle() +2)){
             gyroAngles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
-            brMotor.setPower(-.7);
-            blMotor.setPower(.7);
-//            if(isNeg){
-//                frMotor.setPower(-.7);
-//                flMotor.setPower(.7);
-//            }
-//            else
-//            {
-//                frMotor.setPower(.7);
-//                flMotor.setPower(-.7);
-//            }
+            speed = (tfodHeight()-ONE_FT_HEIGHT)/100; //speed for getting closer
+            if(isNeg)
+            {
+                flMotor.setPower(speed);
+                frMotor.setPower(-speed);
+                brMotor.setPower(speed);
+                blMotor.setPower(speed);
+            }
+            else{
+                flMotor.setPower(-speed);
+                frMotor.setPower(speed);
+                brMotor.setPower(speed);
+                blMotor.setPower(speed);
+            }
+
 
             telemetry.addData("IMU angle", getRoboAngle());
             telemetry.update();
@@ -275,5 +289,29 @@ public class Rover extends LinearOpMode {
         }
 
         return (rotations * 360 + gyroAngles.firstAngle);
+    }
+    private double tfodHeight()
+    {
+        if (tfod != null) {
+            // getUpdatedRecognitions() will return null if no new information is available since
+            // the last time that call was made.
+            updatedRecognitions = tfod.getUpdatedRecognitions();
+            if (updatedRecognitions != null) {
+                telemetry.addData("# Object Detected", updatedRecognitions.size());
+                for (Recognition recognition : updatedRecognitions) {
+                    objectAngle = -recognition.estimateAngleToObject(AngleUnit.DEGREES);
+                    telemetry.addData("angle " + recognition.getLabel(), objectAngle);
+                    objectHeight =  recognition.getHeight();
+                    //telemetry.addData("imu angle: ", getRoboAngle());
+
+                }
+                //rectangle frame is two objects grouped so move robot to read different
+                //choose object based on a.) confidence,
+                gyroAngles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
+                telemetry.update();
+
+            }
+        }
+        return objectHeight;
     }
 }
